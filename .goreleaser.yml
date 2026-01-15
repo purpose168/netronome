@@ -1,34 +1,37 @@
+# GoReleaser 配置文件 - 用于项目的自动化构建和发布
 version: 2
 
+# 构建前钩子
 before:
   hooks:
-    - go mod tidy
+    - go mod tidy  # 清理和更新 Go 模块依赖
 
+# 构建配置
 builds:
-  - id: netronome
+  - id: netronome  # 构建 ID
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=0  # 禁用 CGO，生成静态链接的二进制文件
     flags:
-      - -trimpath
-    ldflags:
-      - -s -w
-      - -X main.version={{.Version}}
-      - -X main.buildTime={{.Date}}
-      - -X main.commit={{.Commit}}
+      - -trimpath  # 移除构建路径中的绝对路径信息
+    ldflags:  # 链接参数
+      - -s -w  # 移除符号表和调试信息，减小二进制文件大小
+      - -X main.version={{.Version}}  # 设置版本信息
+      - -X main.buildTime={{.Date}}    # 设置构建时间
+      - -X main.commit={{.Commit}}      # 设置 Git 提交哈希
     tags:
-      - nosmart
-    goos:
+      - nosmart  # 构建标签（禁用 SMART 功能）
+    goos:  # 目标操作系统
       - linux
       - windows
       - darwin
       - freebsd
-    goarch:
+    goarch:  # 目标架构
       - amd64
       - arm
       - arm64
-    goarm:
+    goarm:  # ARM 架构版本
       - 6
-    ignore:
+    ignore:  # 忽略的构建组合
       - goos: windows
         goarch: arm
       - goos: windows
@@ -39,109 +42,114 @@ builds:
         goarch: arm
       - goos: freebsd
         goarch: arm64
-    main: ./cmd/netronome
-    binary: netronome
+    main: ./cmd/netronome  # 主程序入口
+    binary: netronome  # 生成的二进制文件名
 
+# 打包配置
 archives:
-  - id: netronome
+  - id: netronome  # 打包 ID
     builds:
-      - netronome
-    format_overrides:
+      - netronome  # 包含的构建
+    format_overrides:  # 格式覆盖
       - goos: windows
-        formats: ["zip"]
-    name_template: >-
+        formats: ["zip"]  # Windows 平台使用 zip 格式
+    name_template: >-  # 文件名模板
       {{ .ProjectName }}_
       {{- .Version }}_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else }}{{ .Arch }}{{ end }}
 
+# 发布配置
 release:
-  prerelease: auto
-  footer: |
-    **Full Changelog**: https://github.com/autobrr/netronome/compare/{{ .PreviousTag }}...{{ .Tag }}
+  prerelease: auto  # 自动检测预发布版本
+  footer: |  # 发布说明页脚
+    **完整变更日志**: https://github.com/autobrr/netronome/compare/{{ .PreviousTag }}...{{ .Tag }}
 
-    ## 🐳 Docker images
+    ## 🐳 Docker 镜像
 
     - `docker pull ghcr.io/autobrr/netronome:{{ .Tag }}`
     - `docker pull ghcr.io/autobrr/netronome:latest`
 
-    ## 📚 Resources
+    ## 📚 资源
 
-    - [Documentation](https://netrono.me)
-    - [Discord Community](https://discord.gg/WQ2eUycxyT)
+    - [文档](https://netrono.me)
+    - [Discord 社区](https://discord.gg/WQ2eUycxyT)
     - [GitHub Issues](https://github.com/autobrr/netronome/issues)
     - [GitHub Discussions](https://github.com/autobrr/netronome/discussions)
 
-    ## 💝 Support the project
+    ## 💝 支持项目
 
-    If you find Netronome useful, consider:
-    - Starring the repository
-    - Contributing to the project
-    - Sharing your feedback
-    - Sponsoring the project
+    如果您觉得 Netronome 有用，可以考虑：
+    - 给仓库加星
+    - 为项目贡献
+    - 分享您的反馈
+    - 赞助项目
 
-    ## ⚠️ Temperature Monitoring Support
+    ## ⚠️ 温度监控支持
 
-    Release binaries include most temperature monitoring via gopsutil:
-    - ✅ CPU temperatures (all cores, packages, dies)
-    - ✅ NVMe temperatures (M.2 drives)
-    - ✅ Battery temperatures
-    - ✅ System sensors
+    发布的二进制文件包含通过 gopsutil 提供的大多数温度监控功能：
+    - ✅ CPU 温度（所有核心、封装、芯片）
+    - ✅ NVMe 温度（M.2 驱动器）
+    - ✅ 电池温度
+    - ✅ 系统传感器
     
-    For SATA/HDD temperatures and disk model names, build from source:
+    对于 SATA/HDD 温度和磁盘型号名称，请从源代码构建：
     ```bash
     git clone https://github.com/autobrr/netronome
     cd netronome
-    make build  # Includes full SMART support
+    make build  # 包含完整的 SMART 支持
     ```
     
-    SMART features (SATA/HDD temps) require:
-    - Linux or macOS (not supported on Windows/FreeBSD)
-    - Running with root/sudo privileges
-    - Building from source with CGO enabled
+    SMART 功能（SATA/HDD 温度）需要：
+    - Linux 或 macOS（不支持 Windows/FreeBSD）
+    - 使用 root/sudo 权限运行
+    - 从源代码构建并启用 CGO
 
+# 校验和配置
 checksum:
-  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"  # 校验和文件名模板
 
+# 变更日志配置
 changelog:
-  sort: asc
-  use: github
-  filters:
-    exclude:
+  sort: asc  # 按升序排序
+  use: github  # 使用 GitHub 作为数据源
+  filters:  # 过滤规则
+    exclude:  # 排除的提交信息
       - Merge pull request
       - Merge remote-tracking branch
       - Merge branch
-  groups:
-    - title: "🚀 New Features"
-      regexp: "^.*feat[(\\w)]*:+.*$"
+  groups:  # 提交分组
+    - title: "🚀 新功能"
+      regexp: "^.*feat[(\w)]*:+.*$"
       order: 0
-    - title: "🐛 Bug Fixes"
-      regexp: "^.*fix[(\\w)]*:+.*$"
+    - title: "🐛 错误修复"
+      regexp: "^.*fix[(\w)]*:+.*$"
       order: 10
-    - title: "🔧 Maintenance"
-      regexp: "^.*chore[(\\w)]*:+.*$"
+    - title: "🔧 维护"
+      regexp: "^.*chore[(\w)]*:+.*$"
       order: 20
-    - title: "🔒 Security"
-      regexp: "^.*security[(\\w)]*:+.*$"
+    - title: "🔒 安全"
+      regexp: "^.*security[(\w)]*:+.*$"
       order: 30
-    - title: "⚡ Performance"
-      regexp: "^.*perf[(\\w)]*:+.*$"
+    - title: "⚡ 性能"
+      regexp: "^.*perf[(\w)]*:+.*$"
       order: 40
-    - title: "📝 Documentation"
-      regexp: "^.*docs[(\\w)]*:+.*$"
+    - title: "📝 文档"
+      regexp: "^.*docs[(\w)]*:+.*$"
       order: 50
-    - title: "🔄 Other Changes"
+    - title: "🔄 其他变更"
       order: 999
 
+# 包管理器配置
 nfpms:
-  - package_name: netronome
-    homepage: https://netrono.me
-    maintainer: Netronome <packages@netrono.me>
-    description: |-
-      netronome is a modern network speed testing and monitoring tool.
-    formats:
-      - apk
-      - deb
-      - rpm
-      - archlinux
+  - package_name: netronome  # 包名称
+    homepage: https://netrono.me  # 项目主页
+    maintainer: Netronome <packages@netrono.me>  # 维护者信息
+    description: |-  # 包描述
+      netronome 是一个现代化的网络速度测试和监控工具。
+    formats:  # 支持的包格式
+      - apk  # Alpine Linux 包
+      - deb  # Debian/Ubuntu 包
+      - rpm  # Red Hat/Fedora 包
+      - archlinux  # Arch Linux 包

@@ -1,62 +1,76 @@
-# Netronome Configuration
+# Netronome 配置文件
+# 此文件包含 Netronome 应用的所有配置选项
 
+# 数据库配置
 [database]
-type = "sqlite"
-path = "netronome.db"
+type = "sqlite"  # 数据库类型：sqlite 或 postgres
+path = "netronome.db"  # SQLite 数据库文件路径
 
+# 服务器配置
 [server]
-host = "0.0.0.0"
-port = 7575
-#base_url = "/netronome"
+host = "0.0.0.0"  # 服务器监听地址（0.0.0.0 表示所有网络接口）
+port = 7575  # 服务器端口
+#base_url = "/netronome"  # 反向代理的基础 URL 路径（可选）
 
+# 日志配置
 [logging]
-level = "debug" # trace, debug, info, warn, error, fatal, panic
+level = "debug" # 日志级别：trace, debug, info, warn, error, fatal, panic
 
+# 身份验证配置
 [auth]
-whitelist = ["127.0.0.1/32", "::1/128"]
+whitelist = ["127.0.0.1/32", "::1/128"]  # IP 白名单（无需认证即可访问的 IP 范围）
 
+# OpenID Connect (OIDC) 配置
 [oidc]
-issuer = ""
-client_id = ""
-client_secret = ""
-redirect_url = ""
+issuer = ""  # OIDC 提供商的颁发者 URL
+client_id = ""  # OIDC 客户端 ID
+client_secret = ""  # OIDC 客户端密钥
+redirect_url = ""  # OIDC 重定向 URL
 
+# 速度测试通用配置
 [speedtest]
-timeout = 30
+timeout = 30  # 速度测试的全局超时时间（秒）
 
+# iperf3 速度测试配置
 [speedtest.iperf]
-test_duration = 10
-parallel_conns = 10
-timeout = 30
+test_duration = 10  # 测试持续时间（秒）
+parallel_conns = 10  # 并行连接数
+timeout = 30  # iperf3 测试的超时时间（秒）
 
+# iperf3 ping 配置
 [speedtest.iperf.ping]
-count = 5
-interval = 1000
-timeout = 10
+count = 5  # ping 测试的数据包数量
+interval = 1000  # 数据包发送间隔（毫秒）
+timeout = 10  # ping 测试的超时时间（秒）
 
+# LibreSpeed 速度测试配置
 [speedtest.librespeed]
-timeout = 60
+timeout = 60  # LibreSpeed 测试的超时时间（秒）
 
+# GeoIP 配置
 [geoip]
-country_database_path = "./GeoLite2-Country.mmdb"
-asn_database_path = "./GeoLite2-ASN.mmdb"
+country_database_path = "./GeoLite2-Country.mmdb"  # GeoIP 国家数据库路径
+asn_database_path = "./GeoLite2-ASN.mmdb"  # GeoIP ASN 数据库路径
 
+# 数据包丢失监控配置
 [packetloss]
-enabled = true
-default_interval = 3600
-default_packet_count = 10
-max_concurrent_monitors = 10
-privileged_mode = true
+enabled = true  # 启用数据包丢失监控
+default_interval = 3600  # 默认监控间隔（秒）
+default_packet_count = 10  # 默认数据包数量
+max_concurrent_monitors = 10  # 最大并发监控数量
+privileged_mode = true  # 特权模式（需要 root 权限以支持 MTR）
 
+# 监控代理配置
 [monitor]
-enabled = true
-reconnect_interval = "30s"
+enabled = true  # 启用监控代理
+reconnect_interval = "30s"  # 重连间隔
 
+# Tailscale 配置
 [tailscale]
-enabled = true
-method = "auto" # "auto" (default), "host", or "tsnet"
+enabled = true  # 启用 Tailscale 集成
+method = "auto" # Tailscale 集成方法："auto"（默认）, "host", 或 "tsnet"
 
-# Server discovery settings
-auto_discover = true
-discovery_interval = "1m"
-discovery_port = 8200
+# 服务器发现设置
+auto_discover = true  # 启用自动发现 Tailscale 节点
+discovery_interval = "1m"  # 发现间隔
+discovery_port = 8200  # 发现端口

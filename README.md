@@ -1,13 +1,13 @@
 <h1 align="center">Netronome</h1>
 <p align="center">
-  <strong>Monitor. Analyze. Alert.</strong><br>
-  A complete network performance monitoring solution with distributed agents, real-time metrics, and beautiful visualizations.
+  <strong>监控。分析。告警。</strong><br>
+  一个完整的网络性能监控解决方案，具有分布式代理、实时指标和美观的可视化界面。
 </p>
 <div align="center">
 <p align="center">
-  <img src="https://img.shields.io/badge/Go-1.24-blue?logo=go" alt="Go version">
-  <img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build Status">
-  <img src="https://img.shields.io/github/v/release/autobrr/netronome" alt="Latest Release">
+  <img src="https://img.shields.io/badge/Go-1.24-blue?logo=go" alt="Go 版本">
+  <img src="https://img.shields.io/badge/build-passing-brightgreen" alt="构建状态">
+  <img src="https://img.shields.io/github/v/release/autobrr/netronome" alt="最新版本">
   </a>
     <a href="https://github.com/autobrr/netronome">
     <img src="https://img.shields.io/badge/%F0%9F%92%A1%20netronome-docs-00ACD7.svg?style=flat-square">
@@ -19,149 +19,149 @@
 </div>
 
 <p align="center">
-  <img src=".github/assets/netronome_dashboard.png" alt="Netronome Dashboard">
+  <img src=".github/assets/netronome_dashboard.png" alt="Netronome 仪表板">
 </p>
 
-Netronome is a complete network performance monitoring solution that helps you understand and track your network's health. Whether you're monitoring your home internet connection, managing multi-site infrastructure, or tracking server performance, Netronome provides the insights you need through an intuitive web interface.
+Netronome 是一个完整的网络性能监控解决方案，帮助您了解和跟踪网络健康状况。无论您是在监控家庭互联网连接、管理多站点基础设施，还是跟踪服务器性能，Netronome 都能通过直观的 Web 界面提供所需的洞察。
 
-Built with Go and designed for simplicity, Netronome packages both frontend and backend into a single binary for effortless deployment. With a minimal footprint of just ~35MB RAM usage, it's perfect for resource-constrained environments. No complex setups - just download, configure, and run.
+Netronome 使用 Go 构建，设计简洁，将前端和后端打包到单个二进制文件中，便于部署。仅占用约 35MB RAM 的最小占用空间，非常适合资源受限的环境。无需复杂的设置 - 只需下载、配置和运行。
 
-**Key capabilities:** Speed testing across multiple providers, continuous packet loss monitoring, distributed server monitoring via lightweight agents, and automated alerting - all with beautiful visualizations and historical tracking.
+**核心功能：** 跨多个提供商的速度测试、持续的数据包丢失监控、通过轻量级代理的分布式服务器监控以及自动化告警 - 所有功能都配有美观的可视化和历史跟踪。
 
-## Quick Start
+## 快速开始
 
-Get Netronome running in under 5 minutes:
+在 5 分钟内启动 Netronome：
 
-### Option 1: Download from Releases Page
+### 选项 1：从发布页面下载
 
-Download prebuilt binaries from the [Releases page](https://github.com/autobrr/netronome/releases/latest).
+从[发布页面](https://github.com/autobrr/netronome/releases/latest)下载预构建的二进制文件。
 
-### Option 2: One-liner Installation
+### 选项 2：一键安装
 
 ```bash
-# Download latest release
+# 下载最新版本
 wget $(curl -s https://api.github.com/repos/autobrr/netronome/releases/latest | grep download | grep linux_x86_64 | cut -d\" -f4)
 tar -C /usr/local/bin -xzf netronome*.tar.gz
 
-# Generate default config
+# 生成默认配置
 netronome generate-config
 
-# Start the server
+# 启动服务器
 netronome serve
 ```
 
-Open `http://localhost:7575` in your browser and create your account through the registration page. For Docker users, see the [Docker Installation](#docker-installation) section.
+在浏览器中打开 `http://localhost:7575` 并通过注册页面创建您的账户。对于 Docker 用户，请参阅 [Docker 安装](#docker-installation) 部分。
 
-## Table of Contents
+## 目录
 
-- [Features](#features)
-- [External Dependencies](#external-dependencies)
-- [Installation](#installation)
-  - [Linux Generic](#linux-generic)
-  - [Docker Installation](#docker-installation)
-- [Basic Configuration](#basic-configuration)
-  - [First Run Setup](#first-run-setup)
-  - [Authentication](#authentication)
-  - [Database](#database)
-- [Advanced Configuration](#advanced-configuration)
-  - [System Monitoring](#system-monitoring)
-  - [Packet Loss Monitoring](#packet-loss-monitoring)
-  - [Tailscale Integration](#tailscale-integration)
-  - [Docker Agent Integration](#docker-agent-integration)
-  - [GeoIP Configuration](#geoip-configuration)
-  - [Notifications](#notifications)
-  - [Scheduling](#scheduling)
-- [Reference](#reference)
-  - [Environment Variables](#environment-variables)
-  - [CLI Commands](#cli-commands)
-- [FAQ & Troubleshooting](#faq--troubleshooting)
-- [Building from Source](#building-from-source)
-- [Contributing](#contributing)
-- [License](#license)
+- [功能特性](#功能特性)
+- [外部依赖](#外部依赖)
+- [安装](#安装)
+  - [Linux 通用安装](#linux-通用安装)
+  - [Docker 安装](#docker-安装)
+- [基本配置](#基本配置)
+  - [首次运行设置](#首次运行设置)
+  - [身份验证](#身份验证)
+  - [数据库](#数据库)
+- [高级配置](#高级配置)
+  - [系统监控](#系统监控)
+  - [数据包丢失监控](#数据包丢失监控)
+  - [Tailscale 集成](#tailscale-集成)
+  - [Docker 代理集成](#docker-代理集成)
+  - [GeoIP 配置](#geoip-配置)
+  - [通知](#通知)
+  - [调度](#调度)
+- [参考](#参考)
+  - [环境变量](#环境变量)
+  - [CLI 命令](#cli-命令)
+- [常见问题与故障排除](#常见问题与故障排除)
+- [从源代码构建](#从源代码构建)
+- [贡献](#贡献)
+- [许可证](#许可证)
 
-## Features
+## 功能特性
 
-### Core Functionality
+### 核心功能
 
-- **Speed Testing**: Multiple providers (Speedtest.net, iperf3, LibreSpeed) with real-time progress and historical tracking
-- **Network Diagnostics**: Traceroute and continuous packet loss monitoring with MTR integration
-- **System Monitoring**: Deploy agents for distributed server monitoring with real-time metrics
-- **Flexible Scheduling**: Automated tests with customizable intervals and smart jitter prevention
+- **速度测试**：多个提供商（Speedtest.net、iperf3、LibreSpeed），具有实时进度和历史跟踪
+- **网络诊断**：Traceroute 和持续的数据包丢失监控，集成 MTR
+- **系统监控**：部署代理进行分布式服务器监控，具有实时指标
+- **灵活调度**：自动化测试，具有可自定义的间隔和智能抖动预防
 
-### Network Diagnostics
+### 网络诊断
 
 <p align="center">
-  <img src=".github/assets/packetloss-monitors(mtr).png" alt="Network Diagnostics Interface">
+  <img src=".github/assets/packetloss-monitors(mtr).png" alt="网络诊断界面">
 </p>
 
-Advanced network path analysis with:
+高级网络路径分析，具有：
 
-- Cross-platform traceroute support
-- Continuous ICMP monitoring
-- Per-hop packet loss statistics
-- GeoIP visualization with country flags
-- Historical performance tracking
+- 跨平台 traceroute 支持
+- 持续 ICMP 监控
+- 每跳数据包丢失统计
+- 带有国家标志的 GeoIP 可视化
+- 历史性能跟踪
 
-### System Monitoring
-
-<p align="center">
-  <img src=".github/assets/agents-dashboard.png" alt="System Monitoring Dashboard">
-</p>
+### 系统监控
 
 <p align="center">
-  <img src=".github/assets/agents-bandwidth.png" alt="Bandwidth Monitoring">
+  <img src=".github/assets/agents-dashboard.png" alt="系统监控仪表板">
 </p>
 
 <p align="center">
-  <img src=".github/assets/agents-systeminfo.png" alt="Agent System Information">
+  <img src=".github/assets/agents-bandwidth.png" alt="带宽监控">
 </p>
 
-Monitor multiple servers from one dashboard:
+<p align="center">
+  <img src=".github/assets/agents-systeminfo.png" alt="代理系统信息">
+</p>
 
-- CPU, memory, disk, and temperature metrics
-- Real-time bandwidth monitoring (vnstat)
-- Auto-discovery for Tailscale networks
-- Configurable alerting thresholds
-- Live data streaming via SSE
-- Agents are also single binaries - same simple deployment
+从一个仪表板监控多个服务器：
 
-### Additional Features
+- CPU、内存、磁盘和温度指标
+- 实时带宽监控（vnstat）
+- Tailscale 网络的自动发现
+- 可配置的告警阈值
+- 通过 SSE 的实时数据流
+- 代理也是单个二进制文件 - 同样简单的部署
 
-- **Modern UI**: Responsive design with dark mode support
-- **Authentication**: Built-in auth, OIDC support, IP whitelisting
-- **Notifications**: 15+ services via Shoutrrr (Discord, Telegram, Email, etc.)
-- **Database Support**: SQLite (default) or PostgreSQL
-- **Tailscale Integration**: Secure mesh networking without port exposure
+### 附加功能
 
-### Technical Overview
+- **现代 UI**：响应式设计，支持深色模式
+- **身份验证**：内置身份验证、OIDC 支持、IP 白名单
+- **通知**：通过 Shoutrrr 支持 15+ 种服务（Discord、Telegram、Email 等）
+- **数据库支持**：SQLite（默认）或 PostgreSQL
+- **Tailscale 集成**：无需端口暴露的安全网状网络
 
-- **Single Binary**: Frontend and backend compiled into one executable (~66MB)
-- **Language**: Written in Go for performance and easy deployment
-- **Frontend**: React with TypeScript, embedded in the binary
-- **Database**: SQLite by default, PostgreSQL optional
-- **No Runtime Dependencies**: Just the binary and optional external tools
+### 技术概述
 
-## Prerequisites
+- **单个二进制文件**：前端和后端编译到一个可执行文件中（约 66MB）
+- **语言**：使用 Go 编写，以获得高性能和易于部署
+- **前端**：React with TypeScript，嵌入在二进制文件中
+- **数据库**：默认使用 SQLite，可选 PostgreSQL
+- **无运行时依赖**：只需要二进制文件和可选的外部工具
 
-### System Requirements
+## 系统要求
 
-- **Operating System**: Linux, macOS, or Windows
-- **Architecture**: x86_64, ARM64
-- **Memory**: ~35MB (typical usage)
-- **Disk Space**: 65MB for application + database growth
+### 系统要求
 
-### External Dependencies
+- **操作系统**：Linux、macOS 或 Windows
+- **架构**：x86_64、ARM64
+- **内存**：约 35MB（典型使用情况）
+- **磁盘空间**：应用程序 65MB + 数据库增长空间
 
-The following tools enable specific features (automatically included in Docker):
+### 外部依赖
 
-- **iperf3** - For iperf3 speed testing
-- **librespeed-cli** - For LibreSpeed testing
-- **traceroute** - For basic network path discovery (usually pre-installed)
-- **mtr** - For advanced packet loss analysis per hop (optional, falls back to traceroute)
-  - Windows users should get the binary from https://github.com/dqos/WinMTRCmd/releases
-- **vnstat** - For bandwidth monitoring on agents (optional but recommended)
+以下工具启用特定功能（Docker 中自动包含）：
 
-Install on Linux:
+- **iperf3** - 用于 iperf3 速度测试
+- **librespeed-cli** - 用于 LibreSpeed 测试
+- **traceroute** - 用于基本网络路径发现（通常预装）
+- **mtr** - 用于每跳的高级数据包丢失分析（可选，回退到 traceroute）
+  - Windows 用户应从 https://github.com/dqos/WinMTRCmd/releases 获取二进制文件
+- **vnstat** - 用于代理上的带宽监控（可选但推荐）
+
+在 Linux 上安装：
 
 ```bash
 # Debian/Ubuntu
@@ -171,23 +171,23 @@ sudo apt-get install iperf3 traceroute mtr vnstat
 sudo dnf install iperf3 traceroute mtr vnstat
 ```
 
-Notes:
+注意事项：
 
-- Speedtest.net is built-in
-- All external dependencies are optional - Netronome gracefully handles missing tools
+- Speedtest.net 是内置的
+- 所有外部依赖都是可选的 - Netronome 优雅地处理缺失的工具
 
-## Installation
+## 安装
 
-### Linux Generic
+### Linux 通用安装
 
-1. **Download and Install**
+1. **下载和安装**
 
    ```bash
    wget $(curl -s https://api.github.com/repos/autobrr/netronome/releases/latest | grep download | grep linux_x86_64 | cut -d\" -f4)
    tar -C /usr/local/bin -xzf netronome*.tar.gz
    ```
 
-2. **Create Systemd Service** (Recommended)
+2. **创建 Systemd 服务**（推荐）
 
    ```bash
    sudo tee /etc/systemd/system/netronome@.service > /dev/null <<EOF
@@ -206,89 +206,89 @@ Notes:
    EOF
    ```
 
-3. **Enable and Start**
+3. **启用和启动**
    ```bash
    systemctl enable --now netronome@$USER
    ```
 
-### Windows Generic
+### Windows 通用安装
 
-1. **Download and Install**
+1. **下载和安装**
 ```cmd
-Get the latest binary from https://github.com/autobrr/netronome/releases
-Unzip the release into a folder
-Place any third party binaries in the same folder
-Add the folder to Windows environment variables - restart explorer.exe (and any open terminals)
+从 https://github.com/autobrr/netronome/releases 获取最新的二进制文件
+将发布版本解压到一个文件夹
+将任何第三方二进制文件放在同一文件夹中
+将文件夹添加到 Windows 环境变量 - 重启 explorer.exe（以及任何打开的终端）
 ```
 
-2. **Create a Windows Task Schedule**
+2. **创建 Windows 任务计划**
 ```cmd
 https://www.windowscentral.com/how-create-automated-task-using-task-scheduler-windows-10
 ```
 
-3. **Create Config**
+3. **创建配置**
 ```cmd
-Run `netronome generate-config`
-Edit config.toml to suit `C:\Users\{USERNAME}\.config\netronome`
+运行 `netronome generate-config`
+编辑 config.toml 以适应 `C:\Users\{USERNAME}\.config\netronome`
 ```
 
-### Docker Installation
+### Docker 安装
 
-Quick Docker deployment with automatic dependency installation:
+快速 Docker 部署，自动安装依赖：
 
 ```bash
-# Clone the repository (for docker-compose files)
+# 克隆仓库（用于 docker-compose 文件）
 git clone https://github.com/autobrr/netronome.git
 cd netronome
 
-# Basic setup with SQLite
+# 使用 SQLite 的基本设置
 docker-compose up -d
 
-# Or with PostgreSQL for better performance
+# 或使用 PostgreSQL 以获得更好的性能
 docker-compose -f docker-compose.postgres.yml up -d
 ```
 
-The Docker image includes all dependencies (iperf3, librespeed-cli, traceroute, mtr, vnstat) pre-installed, so you don't need to install them separately. For Tailscale integration with Docker, see the [Docker Tailscale Sidecar Guide](docs/docker-tailscale-sidecar.md).
+Docker 镜像包含所有依赖项（iperf3、librespeed-cli、traceroute、mtr、vnstat）预安装，因此您无需单独安装它们。对于与 Docker 的 Tailscale 集成，请参阅 [Docker Tailscale Sidecar 指南](docs/docker-tailscale-sidecar.md)。
 
-## Basic Configuration
+## 基本配置
 
-### First Run Setup
+### 首次运行设置
 
-1. **Generate Configuration**
+1. **生成配置**
 
    ```bash
    netronome generate-config
    ```
 
-   This creates `~/.config/netronome/config.toml` with default settings.
+   这将创建 `~/.config/netronome/config.toml`，包含默认设置。
 
-2. **Start Server**
+2. **启动服务器**
 
    ```bash
    netronome serve
    ```
 
-3. **Access Interface**
-   Navigate to `http://localhost:7575` and register your account through the web interface.
+3. **访问界面**
+   导航到 `http://localhost:7575` 并通过 Web 界面注册您的账户。
 
-   To access from other devices on your network, change the host in config.toml from `127.0.0.1` to `0.0.0.0`.
+   要从网络上的其他设备访问，请将 config.toml 中的主机从 `127.0.0.1` 更改为 `0.0.0.0`。
 
-### Authentication
+### 身份验证
 
-Netronome supports multiple authentication methods:
+Netronome 支持多种身份验证方法：
 
-#### Built-in Authentication
+#### 内置身份验证
 
-Users can register directly through the web interface on first visit. For automation or admin purposes, you can also manage users via CLI:
+用户可以在首次访问时直接通过 Web 界面注册。对于自动化或管理目的，您也可以通过 CLI 管理用户：
 
 ```bash
-netronome create-user <username>     # Create user via CLI
-netronome change-password <username>  # Change password via CLI
+netronome create-user <username>     # 通过 CLI 创建用户
+netronome change-password <username>  # 通过 CLI 更改密码
 ```
 
 #### OpenID Connect (OIDC)
 
-Configure via environment variables:
+通过环境变量配置：
 
 ```bash
 export NETRONOME__OIDC_ISSUER=https://your-provider.com
@@ -297,24 +297,24 @@ export NETRONOME__OIDC_CLIENT_SECRET=your-client-secret
 export NETRONOME__OIDC_REDIRECT_URL=https://netronome.example.com/api/auth/oidc/callback
 ```
 
-#### IP Whitelisting
+#### IP 白名单
 
-Add to `config.toml`:
+添加到 `config.toml`：
 
 ```toml
 [auth]
 whitelist = ["127.0.0.1/32", "192.168.1.0/24"]
 ```
 
-### Database
+### 数据库
 
-#### SQLite (Default)
+#### SQLite（默认）
 
-No additional setup required. Database file is created automatically.
+无需额外设置。数据库文件自动创建。
 
 #### PostgreSQL
 
-Configure via environment variables:
+通过环境变量配置：
 
 ```bash
 export NETRONOME__DB_TYPE=postgres
@@ -325,27 +325,27 @@ export NETRONOME__DB_PASSWORD=your-password
 export NETRONOME__DB_NAME=netronome
 ```
 
-### Reverse Proxy with Base URL
+### 使用基础 URL 的反向代理
 
-To serve Netronome under a subpath (e.g., `/netronome`) behind nginx:
+要在 nginx 后面的子路径（例如 `/netronome`）下提供 Netronome：
 
-#### 1. Configure Netronome
+#### 1. 配置 Netronome
 
-Set the base URL in your `config.toml`:
+在 `config.toml` 中设置基础 URL：
 
 ```toml
 [server]
-host = "127.0.0.1"  # Listen only on localhost since nginx will proxy
+host = "127.0.0.1"  # 仅在 localhost 上监听，因为 nginx 将代理
 port = 7575
-base_url = "/netronome"  # The subpath you want to use
+base_url = "/netronome"  # 您要使用的子路径
 ```
 
-#### 2. Configure nginx
+#### 2. 配置 nginx
 
-Add this location block to your nginx configuration:
+将此 location 块添加到您的 nginx 配置：
 
 ```nginx
-# Redirect /netronome to /netronome/
+# 将 /netronome 重定向到 /netronome/
 location = /netronome {
     return 301 /netronome/;
 }
@@ -361,147 +361,147 @@ location /netronome/ {
 }
 ```
 
-That's it! The minimal configuration above handles WebSocket/SSE for real-time features.
+就是这样！上面的最小配置处理了 WebSocket/SSE 以实现实时功能。
 
-## Common Use Cases
+## 常见用例
 
-### Home Network Monitoring
+### 家庭网络监控
 
-Monitor your internet connection quality:
+监控您的互联网连接质量：
 
-1. Schedule hourly speed tests to your ISP
-2. Set up packet loss monitoring to `8.8.8.8` or `1.1.1.1`
-3. Configure notifications when speeds drop below expected thresholds
+1. 安排每小时对您的 ISP 进行速度测试
+2. 设置对 `8.8.8.8` 或 `1.1.1.1` 的数据包丢失监控
+3. 配置速度低于预期阈值时的通知
 
-### Multi-Site Infrastructure
+### 多站点基础设施
 
-Monitor connectivity between office locations:
+监控办公室位置之间的连接：
 
-1. Deploy agents at each site
-2. Configure iperf3 tests between locations
-3. Use Tailscale for secure agent communication
-4. Set up alerts for degraded inter-site connectivity
+1. 在每个站点部署代理
+2. 配置位置之间的 iperf3 测试
+3. 使用 Tailscale 进行安全的代理通信
+4. 为站点间连接降级设置告警
 
-### Server Health Monitoring
+### 服务器健康监控
 
-Track server performance metrics:
+跟踪服务器性能指标：
 
-1. Install agents on production servers
-2. Monitor CPU, memory, disk usage, and temperatures
-3. Configure threshold alerts for resource exhaustion
-4. Track bandwidth usage patterns
+1. 在生产服务器上安装代理
+2. 监控 CPU、内存、磁盘使用情况和温度
+3. 配置资源耗尽的阈值告警
+4. 跟踪带宽使用模式
 
-## Advanced Configuration
+## 高级配置
 
-### System Monitoring
+### 系统监控
 
-Deploy monitoring agents on remote servers for full system visibility.
+在远程服务器上部署监控代理以获得完整的系统可见性。
 
-#### Quick Agent Installation
+#### 快速代理安装
 
 ```bash
 curl -sL https://netrono.me/install-agent | bash
 ```
 
-The script provides interactive setup for:
+该脚本提供交互式设置：
 
-- Network interface selection
-- API key configuration
-- Listening address and port
-- Systemd service creation
-- Automatic updates
+- 网络接口选择
+- API 密钥配置
+- 监听地址和端口
+- Systemd 服务创建
+- 自动更新
 
-#### Manual Agent Setup
+#### 手动代理设置
 
 ```bash
-# Basic agent
+# 基本代理
 netronome agent
 
-# With authentication
+# 带身份验证
 netronome agent --api-key your-secret-key
 
-# Custom configuration
+# 自定义配置
 netronome agent --host 192.168.1.100 --port 8300 --interface eth0
 ```
 
-#### Agent Configuration
+#### 代理配置
 
-Add to `config.toml`:
+添加到 `config.toml`：
 
 ```toml
 [agent]
 host = "0.0.0.0"
 port = 8200
-interface = ""  # Empty for all interfaces
+interface = ""  # 空表示所有接口
 api_key = "your-secret-key"
-disk_includes = ["/mnt/storage"]  # Additional mounts to monitor
-disk_excludes = ["/boot", "/tmp"] # Mounts to exclude
+disk_includes = ["/mnt/storage"]  # 要监控的其他挂载点
+disk_excludes = ["/boot", "/tmp"] # 要排除的挂载点
 
 [monitor]
 enabled = true
 ```
 
-### Packet Loss Monitoring
+### 数据包丢失监控
 
-Continuous network monitoring with MTR integration and performance tracking.
+使用 MTR 集成和性能跟踪的持续网络监控。
 
-#### Key Features
+#### 关键功能
 
-- Flexible scheduling (10 seconds to 24 hours or exact daily times)
-- Real-time progress indicators
-- Historical performance charts
-- Cross-platform support with privilege fallback
+- 灵活的调度（10 秒到 24 小时或精确的每日时间）
+- 实时进度指示器
+- 历史性能图表
+- 具有权限回退的跨平台支持
 
-#### Important Notes
+#### 重要说明
 
-- MTR requires elevated privileges for full functionality
-- Overall packet loss can be 0% even with intermediate hop timeouts (normal behavior)
+- MTR 需要提升的权限才能完全运行
+- 即使中间跳超时，总体数据包丢失也可能为 0%（正常行为）
 
-### Tailscale Integration
+### Tailscale 集成
 
-Native Tailscale support for secure mesh networking without port exposure.
+原生 Tailscale 支持，无需端口暴露的安全网状网络。
 
-#### Agent Setup
+#### 代理设置
 
 ```bash
-# Basic Tailscale agent
+# 基本 Tailscale 代理
 netronome agent --tailscale --tailscale-auth-key tskey-auth-YOUR-KEY
 
-# Use existing tailscaled
+# 使用现有的 tailscaled
 netronome agent --tailscale --tailscale-method host
 
-# Custom hostname
+# 自定义主机名
 netronome agent --tailscale --tailscale-hostname "webserver-prod"
 ```
 
-#### Server Configuration
+#### 服务器配置
 
 ```toml
 [tailscale]
 enabled = true
-method = "auto"  # auto, host, or tsnet
-auth_key = ""    # Required for tsnet mode
-hostname = ""    # Optional custom hostname
+method = "auto"  # auto、host 或 tsnet
+auth_key = ""    # tsnet 模式需要
+hostname = ""    # 可选的自定义主机名
 
-# Discovery settings
+# 发现设置
 auto_discover = true
 discovery_interval = "5m"
 discovery_port = 8200
 ```
 
-### Docker Agent Integration
+### Docker 代理集成
 
-You may wish to run an agent inside of a Docker container, for example, to monitor VPN traffic on a container like Gluetun.
-By default, this will not work, because the container cannot access the host's network interface for statistics.
+您可能希望在 Docker 容器内运行代理，例如，在像 Gluetun 这样的容器上监控 VPN 流量。
+默认情况下，这将不起作用，因为容器无法访问主机的网络接口以获取统计信息。
 
-To monitor bandwidth on VPN networked containers, you will need to run both the agent, and a **vnstat** container in the same network as your VPN container.
+要监控 VPN 网络容器上的带宽，您需要在与 VPN 容器相同的网络中运行代理和 **vnstat** 容器。
 
 <details>
-<summary>Docker Agent Integration Compose Example</summary>
-  
+<summary>Docker 代理集成 Compose 示例</summary>
+
 ```yml
 services:
-  # Gluetun - VPN client container
+  # Gluetun - VPN 客户端容器
   gluetun:
     image: qmcgaw/gluetun:latest
     container_name: gluetun
@@ -515,13 +515,13 @@ services:
     environment:
       - VPN_SERVICE_PROVIDER=your_provider
       - VPN_TYPE=wireguard
-      # ... your VPN configuration
+      # ... 您的 VPN 配置
     networks:
       monitoring:
         aliases:
-          - netronome-vpn-agent  # Allows dashboard to reach agent by name
+          - netronome-vpn-agent  # 允许仪表板按名称访问代理
 
-  # vnstat - collects bandwidth data on the VPN tunnel
+  # vnstat - 在 VPN 隧道上收集带宽数据
   vnstat:
     image: vergoh/vnstat:latest
     container_name: vnstat
@@ -532,11 +532,11 @@ services:
     environment:
       - TZ=
     volumes:
-      - /path/to/vnstat:/var/lib/vnstat # Add a mount for the vnstat db
+      - /path/to/vnstat:/var/lib/vnstat # 添加 vnstat 数据库的挂载点
 
-  # Netronome VPN agent - monitors VPN tunnel traffic
+  # Netronome VPN 代理 - 监控 VPN 隧道流量
   netronome-vpn-agent:
-    image: ghcr.io/autobrr/netronome:latest # You could also put the agent bin in a smaller image
+    image: ghcr.io/autobrr/netronome:latest # 您也可以将代理 bin 放在较小的镜像中
     container_name: netronome-vpn-agent
     restart: unless-stopped
     network_mode: "service:gluetun"
@@ -547,18 +547,18 @@ services:
       - TZ=
       - NETRONOME__AGENT_HOST=0.0.0.0
       - NETRONOME__AGENT_PORT=8200
-      - NETRONOME__AGENT_API_KEY=  # Optional: set for authentication
+      - NETRONOME__AGENT_API_KEY=  # 可选：设置用于身份验证
     command:
       - agent
       - --interface
-      - tun0  # VPN tunnel interface
+      - tun0  # VPN 隧道接口
     volumes:
       - /path/to/vnstat:/var/lib/vnstat:ro
     cap_add:
       - NET_RAW
       - NET_ADMIN
 
-  # Netronome dashboard - main web interface
+  # Netronome 仪表板 - 主要 Web 界面
   netronome:
     image: ghcr.io/autobrr/netronome:latest
     container_name: netronome
@@ -583,102 +583,102 @@ networks:
 ```
 </details>
 
-Determine the correct VPN intercface to monitor by running:
+通过运行以下命令确定要监控的正确 VPN 接口：
 
 ```
 docker exec gluetun ip -br link
 ```
 
-Common interface names:
-* `tun0` - OpenVPN or Gluetun custom provider
+常见接口名称：
+* `tun0` - OpenVPN 或 Gluetun 自定义提供商
 * `wg0` - WireGuard
 
-#### Limiting Monitored Interfaces
+#### 限制监控的接口
 
-By default, `vnstat` will monitor all detected interfaces (e.g., eth0 and tun0). To monitor only the VPN tunnel:
+默认情况下，`vnstat` 将监控所有检测到的接口（例如 eth0 和 tun0）。要仅监控 VPN 隧道：
 
 ```sh
-# Remove unwanted interfaces from vnstat
+# 从 vnstat 中删除不需要的接口
 docker exec vnstat vnstat --remove -i eth0 --force
 
-# Verify only tun0 is being tracked
+# 验证仅跟踪 tun0
 docker exec vnstat vnstat
 ```
 
-### GeoIP Configuration
+### GeoIP 配置
 
-Enable country flags and ASN information in traceroute results (optional):
+在 traceroute 结果中启用国家标志和 ASN 信息（可选）：
 
-1. Sign up for a free license at [MaxMind](https://www.maxmind.com/en/geolite2/signup)
-2. Download the GeoLite2 databases (Country and ASN)
-3. Add paths to your config:
+1. 在 [MaxMind](https://www.maxmind.com/en/geolite2/signup) 注册免费许可证
+2. 下载 GeoLite2 数据库（Country 和 ASN）
+3. 将路径添加到您的配置：
    ```toml
    [geoip]
    country_database_path = "/path/to/GeoLite2-Country.mmdb"
    asn_database_path = "/path/to/GeoLite2-ASN.mmdb"
    ```
 
-Netronome works perfectly without GeoIP - this just adds visual country indicators.
+Netronome 在没有 GeoIP 的情况下也能完美运行 - 这只是添加了视觉国家指示器。
 
-### Notifications
+### 通知
 
 <p align="center">
-  <img src=".github/assets/notifications.png" alt="Notifications Configuration">
+  <img src=".github/assets/notifications.png" alt="通知配置">
 </p>
 
-Configure notifications through the web interface at **Settings > Notifications**.
+通过 Web 界面在 **设置 > 通知** 中配置通知。
 
-#### Supported Services
+#### 支持的服务
 
-- Discord, Telegram, Slack, Teams
-- Email (SMTP), Pushover, Pushbullet
-- Gotify, Matrix, Ntfy, Webhook
-- [And 15+ more via Shoutrrr](https://containrrr.dev/shoutrrr/)
+- Discord、Telegram、Slack、Teams
+- Email (SMTP)、Pushover、Pushbullet
+- Gotify、Matrix、Ntfy、Webhook
+- [以及通过 Shoutrrr 的 15+ 种更多服务](https://containrrr.dev/shoutrrr/)
 
-#### Notification Events
+#### 通知事件
 
-- Speed test completion, failures, threshold breaches
-- Packet loss state changes (degraded/recovered)
-- Agent metrics: CPU, memory, disk, bandwidth, temperature thresholds
+- 速度测试完成、失败、阈值突破
+- 数据包丢失状态变化（降级/恢复）
+- 代理指标：CPU、内存、磁盘、带宽、温度阈值
 
-### Scheduling
+### 调度
 
-Two scheduling types supported:
+支持两种调度类型：
 
-#### Duration-based Intervals
+#### 基于持续时间的间隔
 
 ```
 "30s", "5m", "1h", "24h"
 ```
 
-Adds 1-300 seconds of random jitter to prevent simultaneous execution.
+添加 1-300 秒的随机抖动以防止同时执行。
 
-#### Exact Time Intervals
+#### 精确时间间隔
 
 ```
-"exact:14:30"           # Daily at 2:30 PM
-"exact:00:00,12:00"     # Midnight and noon daily
+"exact:14:30"           # 每天下午 2:30
+"exact:00:00,12:00"     # 每天午夜和中午
 ```
 
-Adds 1-60 seconds of random jitter.
+添加 1-60 秒的随机抖动。
 
-## Reference
+## 参考
 
-### Environment Variables
+### 环境变量
 
-All configuration options can be set via environment variables using the `NETRONOME__` prefix. Here are the most commonly used:
+所有配置选项都可以使用 `NETRONOME__` 前缀通过环境变量设置。以下是最常用的：
 
 ```bash
-# Server settings
-NETRONOME__HOST=0.0.0.0              # Listen address
-NETRONOME__PORT=7575                 # Web UI port
-NETRONOME__BASE_URL=/                # Base URL for reverse proxy
+# 服务器设置
+NETRONOME__HOST=0.0.0.0              # 监听地址
+NETRONOME__PORT=7575                 # Web UI 端口
+NETRONOME__BASE_URL=/                # 反向代理的基础 URL
 
-# Database (SQLite by default)
-NETRONOME__DB_TYPE=sqlite            # sqlite or postgres
-NETRONOME__DB_PATH=netronome.db      # SQLite database path
+# 数据库（默认 SQLite）
+NETRONOME__DB_TYPE=sqlite            # sqlite 或 postgres
+NETRONOME__DB_PATH=netronome.db      # SQLite 数据库路径
 
-# PostgreSQL (when DB_TYPE=postgres)
+# PostgreSQL（当 DB_TYPE=postgres 时）
 NETRONOME__DB_HOST=localhost
 NETRONOME__DB_PORT=5432
 NETRONOME__DB_USER=postgres
@@ -686,11 +686,11 @@ NETRONOME__DB_PASSWORD=secret
 NETRONOME__DB_NAME=netronome
 NETRONOME__DB_SSLMODE=disable
 
-# Authentication
-NETRONOME__AUTH_WHITELIST=127.0.0.1/32,192.168.1.0/24  # IP whitelist (comma-separated)
-NETRONOME__SESSION_SECRET=           # Session secret (auto-generated if empty)
+# 身份验证
+NETRONOME__AUTH_WHITELIST=127.0.0.1/32,192.168.1.0/24  # IP 白名单（逗号分隔）
+NETRONOME__SESSION_SECRET=           # 会话密钥（如果为空则自动生成）
 
-# OIDC (optional)
+# OIDC（可选）
 NETRONOME__OIDC_ISSUER=https://accounts.google.com
 NETRONOME__OIDC_CLIENT_ID=your-client-id
 NETRONOME__OIDC_CLIENT_SECRET=your-secret
@@ -698,256 +698,242 @@ NETRONOME__OIDC_REDIRECT_URL=https://example.com/api/auth/oidc/callback
 ```
 
 <details>
-<summary><b>Complete Environment Variables Reference</b> (click to expand)</summary>
+<summary><b>完整环境变量参考</b>（点击展开）</summary>
 
-### Server Configuration
+### 服务器配置
 
 ```bash
-NETRONOME__HOST=127.0.0.1                    # Server listen address
-NETRONOME__PORT=7575                         # Server port
-NETRONOME__BASE_URL=/                        # Base URL path (for reverse proxy)
-NETRONOME__GIN_MODE=                         # Gin framework mode (debug/release/test)
+NETRONOME__HOST=127.0.0.1                    # 服务器监听地址
+NETRONOME__PORT=7575                         # 服务器端口
+NETRONOME__BASE_URL=/                        # 基础 URL 路径（用于反向代理）
+NETRONOME__GIN_MODE=                         # Gin 框架模式（debug/release/test）
 ```
 
-### Database Configuration
+### 数据库配置
 
 ```bash
-NETRONOME__DB_TYPE=sqlite                    # Database type: sqlite or postgres
-NETRONOME__DB_PATH=netronome.db              # SQLite database file path
-NETRONOME__DB_HOST=localhost                 # PostgreSQL host
-NETRONOME__DB_PORT=5432                      # PostgreSQL port
-NETRONOME__DB_USER=postgres                  # PostgreSQL user
-NETRONOME__DB_PASSWORD=                      # PostgreSQL password
-NETRONOME__DB_NAME=netronome                 # PostgreSQL database name
-NETRONOME__DB_SSLMODE=disable                # PostgreSQL SSL mode
+NETRONOME__DB_TYPE=sqlite                    # 数据库类型：sqlite 或 postgres
+NETRONOME__DB_PATH=netronome.db              # SQLite 数据库文件路径
+NETRONOME__DB_HOST=localhost                 # PostgreSQL 主机
+NETRONOME__DB_PORT=5432                      # PostgreSQL 端口
+NETRONOME__DB_USER=postgres                  # PostgreSQL 用户名
+NETRONOME__DB_PASSWORD=                      # PostgreSQL 密码
+NETRONOME__DB_NAME=netronome                 # PostgreSQL 数据库名称
+NETRONOME__DB_SSLMODE=disable                # PostgreSQL SSL 模式
 ```
 
-### Logging
+### 身份验证配置
 
 ```bash
-NETRONOME__LOG_LEVEL=info                    # Log level: trace, debug, info, warn, error, fatal, panic
+NETRONOME__AUTH_WHITELIST=127.0.0.1/32       # IP 白名单（逗号分隔）
+NETRONOME__SESSION_SECRET=                    # 会话密钥（如果为空则自动生成）
 ```
 
-### Authentication
+### OIDC 配置
 
 ```bash
-NETRONOME__AUTH_WHITELIST=                   # Comma-separated CIDR networks to bypass auth
-NETRONOME__SESSION_SECRET=                   # Session encryption secret (auto-generated if empty)
+NETRONOME__OIDC_ISSUER=https://accounts.google.com  # OIDC 颁发者 URL
+NETRONOME__OIDC_CLIENT_ID=your-client-id             # OIDC 客户端 ID
+NETRONOME__OIDC_CLIENT_SECRET=your-secret            # OIDC 客户端密钥
+NETRONOME__OIDC_REDIRECT_URL=https://example.com/api/auth/oidc/callback  # OIDC 重定向 URL
 ```
 
-### OIDC Configuration
+### 代理配置
 
 ```bash
-NETRONOME__OIDC_ISSUER=                      # OIDC provider URL
-NETRONOME__OIDC_CLIENT_ID=                   # OIDC client ID
-NETRONOME__OIDC_CLIENT_SECRET=               # OIDC client secret
-NETRONOME__OIDC_REDIRECT_URL=                # OIDC callback URL
+NETRONOME__AGENT_HOST=0.0.0.0               # 代理监听地址
+NETRONOME__AGENT_PORT=8200                   # 代理端口
+NETRONOME__AGENT_INTERFACE=                  # 代理网络接口（空表示所有）
+NETRONOME__AGENT_API_KEY=                    # 代理 API 密钥
 ```
 
-### Speed Test Configuration
+### 监控配置
 
 ```bash
-NETRONOME__SPEEDTEST_TIMEOUT=30              # Overall speedtest timeout (seconds)
-
-# iperf3 settings
-NETRONOME__IPERF_TEST_DURATION=10            # Test duration (seconds)
-NETRONOME__IPERF_PARALLEL_CONNS=4            # Parallel connections
-NETRONOME__IPERF_TIMEOUT=60                  # iperf3 timeout (seconds)
-NETRONOME__IPERF_PING_COUNT=5                # Ping count for latency test
-NETRONOME__IPERF_PING_INTERVAL=1000          # Ping interval (milliseconds)
-NETRONOME__IPERF_PING_TIMEOUT=10             # Ping timeout (seconds)
-
-# LibreSpeed settings
-NETRONOME__LIBRESPEED_TIMEOUT=60             # LibreSpeed timeout (seconds)
+NETRONOME__MONITOR_ENABLED=true              # 启用监控
 ```
 
-### Pagination
+### Tailscale 配置
 
 ```bash
-NETRONOME__DEFAULT_PAGE=1                    # Default page number
-NETRONOME__DEFAULT_PAGE_SIZE=20              # Default items per page
-NETRONOME__MAX_PAGE_SIZE=100                 # Maximum items per page
-NETRONOME__DEFAULT_TIME_RANGE=1w             # Default time range for queries
-NETRONOME__DEFAULT_LIMIT=20                  # Default query limit
+NETRONOME__TAILSCALE_ENABLED=true            # 启用 Tailscale
+NETRONOME__TAILSCALE_METHOD=auto             # Tailscale 方法：auto、host 或 tsnet
+NETRONOME__TAILSCALE_AUTH_KEY=               # Tailscale 认证密钥（tsnet 模式需要）
+NETRONOME__TAILSCALE_HOSTNAME=               # Tailscale 主机名（可选）
+NETRONOME__TAILSCALE_AUTO_DISCOVER=true      # 自动发现 Tailscale 节点
+NETRONOME__TAILSCALE_DISCOVERY_INTERVAL=5m   # 发现间隔
+NETRONOME__TAILSCALE_DISCOVERY_PORT=8200     # 发现端口
 ```
 
-### GeoIP Configuration
+### GeoIP 配置
 
 ```bash
-NETRONOME__GEOIP_COUNTRY_DATABASE_PATH=      # Path to GeoLite2-Country.mmdb
-NETRONOME__GEOIP_ASN_DATABASE_PATH=          # Path to GeoLite2-ASN.mmdb
+NETRONOME__GEOIP_COUNTRY_DATABASE_PATH=/path/to/GeoLite2-Country.mmdb  # GeoIP 国家数据库路径
+NETRONOME__GEOIP_ASN_DATABASE_PATH=/path/to/GeoLite2-ASN.mmdb           # GeoIP ASN 数据库路径
 ```
 
-### Packet Loss Monitoring
+### 通知配置
 
 ```bash
-NETRONOME__PACKETLOSS_ENABLED=true                      # Enable packet loss monitoring
-NETRONOME__PACKETLOSS_DEFAULT_INTERVAL=3600             # Default test interval (seconds)
-NETRONOME__PACKETLOSS_DEFAULT_PACKET_COUNT=10           # Packets per test
-NETRONOME__PACKETLOSS_MAX_CONCURRENT_MONITORS=10        # Max concurrent monitors
-NETRONOME__PACKETLOSS_PRIVILEGED_MODE=true              # Use privileged ICMP mode
-NETRONOME__PACKETLOSS_RESTORE_MONITORS_ON_STARTUP=false # Restore monitors on startup
-```
-
-### Agent Configuration
-
-```bash
-NETRONOME__AGENT_HOST=0.0.0.0                # Agent listen address
-NETRONOME__AGENT_PORT=8200                   # Agent port
-NETRONOME__AGENT_INTERFACE=                  # Network interface to monitor (empty for all)
-NETRONOME__AGENT_API_KEY=                    # Agent API key for authentication
-NETRONOME__AGENT_DISK_INCLUDES=              # Comma-separated paths to include
-NETRONOME__AGENT_DISK_EXCLUDES=              # Comma-separated paths to exclude
-```
-
-### Monitor Configuration
-
-```bash
-NETRONOME__MONITOR_ENABLED=true              # Enable system monitoring
-NETRONOME__MONITOR_RECONNECT_INTERVAL=30s    # Agent reconnection interval
-```
-
-### Tailscale Configuration
-
-```bash
-# Core settings
-NETRONOME__TAILSCALE_ENABLED=false           # Enable Tailscale integration
-NETRONOME__TAILSCALE_METHOD=auto             # Method: auto, host, or tsnet
-NETRONOME__TAILSCALE_AUTH_KEY=               # Auth key (required for tsnet)
-
-# TSNet settings
-NETRONOME__TAILSCALE_HOSTNAME=               # Custom hostname (optional)
-NETRONOME__TAILSCALE_EPHEMERAL=false         # Remove on shutdown
-NETRONOME__TAILSCALE_STATE_DIR=~/.config/netronome/tsnet  # State directory
-NETRONOME__TAILSCALE_CONTROL_URL=            # For Headscale (optional)
-
-# Agent settings
-NETRONOME__TAILSCALE_AGENT_PORT=8200         # Port for agent to listen on
-
-# Discovery settings
-NETRONOME__TAILSCALE_AUTO_DISCOVER=true      # Auto-discover Tailscale agents
-NETRONOME__TAILSCALE_DISCOVERY_INTERVAL=5m   # Discovery check interval
-NETRONOME__TAILSCALE_DISCOVERY_PORT=8200     # Port to probe for agents
-NETRONOME__TAILSCALE_DISCOVERY_PREFIX=       # Hostname prefix filter
-
-# Deprecated (for backward compatibility)
-NETRONOME__TAILSCALE_PREFER_HOST=false       # Prefer host mode over tsnet
-NETRONOME__TAILSCALE_AGENT_ENABLED=false     # Enable agent mode
-NETRONOME__TAILSCALE_AGENT_ACCEPT_ROUTES=true # Accept Tailscale routes
+NETRONOME__NOTIFICATION_ENABLED=true         # 启用通知
 ```
 
 </details>
 
-### CLI Commands
+### CLI 命令
 
 ```bash
-# Server management
-netronome serve                    # Start the server
-netronome generate-config          # Generate default config
+# 服务器命令
+netronome serve              # 启动服务器
+netronome generate-config    # 生成默认配置文件
 
-# User management
-netronome create-user <username>   # Create new user
-netronome change-password <username> # Change user password
+# 用户管理
+netronome create-user <username>     # 创建新用户
+netronome change-password <username> # 更改用户密码
 
-# Agent mode
-netronome agent                    # Start monitoring agent
-netronome agent --api-key secret   # Agent with authentication
+# 代理命令
+netronome agent              # 启动代理
+netronome agent --api-key <key>  # 使用 API 密钥启动代理
+netronome agent --host <addr> --port <port>  # 使用自定义地址和端口启动代理
+netronome agent --interface <iface>  # 使用特定接口启动代理
+netronome agent --tailscale  # 使用 Tailscale 启动代理
+netronome agent --tailscale-auth-key <key>  # 使用 Tailscale 认证密钥启动代理
+netronome agent --tailscale-hostname <hostname>  # 使用自定义 Tailscale 主机名启动代理
 ```
 
-## FAQ & Troubleshooting
+## 常见问题与故障排除
 
-### Getting Started
+### 常见问题
 
-**Q: What's the default username/password?**
+**Q: Netronome 需要端口转发吗？**
+A: 不需要。Netronome 使用 Tailscale 进行安全的网状网络，无需端口暴露。
 
-For manual installation, you register through the web interface on first visit - no default credentials.
+**Q: 我可以运行多个代理吗？**
+A: 可以。您可以在多个服务器上部署代理，并从一个仪表板监控所有代理。
 
-**Q: Can I access Netronome from other devices on my network?**
+**Q: 如何监控 VPN 流量？**
+A: 您需要在与 VPN 容器相同的网络中运行代理和 vnstat 容器。请参阅 [Docker 代理集成](#docker-代理集成) 部分。
 
-Yes! Change the host in your config from `127.0.0.1` to `0.0.0.0` or set `NETRONOME__HOST=0.0.0.0`.
+**Q: MTR 需要什么权限？**
+A: MTR 需要提升的权限（root 或 sudo）才能完全运行。如果没有足够的权限，它将回退到 traceroute。
 
-**Q: Do I need all the external dependencies?**
+**Q: 如何更改数据库类型？**
+A: 使用环境变量 `NETRONOME__DB_TYPE` 设置数据库类型为 `sqlite` 或 `postgres`。
 
-No, Netronome works without them. You only need:
+**Q: 如何配置反向代理？**
+A: 请参阅 [使用基础 URL 的反向代理](#使用基础-url-的反向代理) 部分。
 
-- `iperf3` for iperf3 speed tests
-- `librespeed-cli` for LibreSpeed tests
-- Speedtest.net works out of the box
+### 故障排除
 
-### Common Issues
+**问题：无法启动服务器**
+- 检查端口 7575 是否已被占用
+- 检查配置文件语法是否正确
+- 检查数据库文件权限
 
-**Q: "Port 7575 already in use" error?**
+**问题：代理无法连接到服务器**
+- 检查 API 密钥是否正确
+- 检查网络连接和防火墙设置
+- 检查服务器地址和端口是否正确
 
-Another service is using the port. Either stop that service or change Netronome's port in the config.
+**问题：速度测试失败**
+- 检查 iperf3 或 librespeed-cli 是否已安装
+- 检查网络连接
+- 检查防火墙设置
 
-**Q: Speed tests are slower than expected?**
+**问题：数据包丢失监控不工作**
+- 检查 mtr 或 traceroute 是否已安装
+- 检查是否有足够的权限运行 mtr
+- 检查目标主机是否可达
 
-1. Ensure you're testing to a nearby server
-2. Check if other devices are using bandwidth
-3. Try different test providers (some ISPs throttle specific tests)
-4. For iperf3, ensure the server supports your connection speed
+## 从源代码构建
 
-### Temperature Monitoring
+### 前置要求
 
-**Q: Why don't I see disk temperatures?**
+- Go 1.24 或更高版本
+- Node.js 18 或更高版本（用于构建前端）
+- npm 或 yarn
 
-Disk temperature monitoring requires:
+### 构建步骤
 
-1. Platform support (Linux/macOS for SATA, all platforms for NVMe)
-2. Elevated privileges (root/sudo for SMART access)
-3. SMART-enabled drives with temperature sensors
+1. **克隆仓库**
 
-### Network Diagnostics
+   ```bash
+   git clone https://github.com/autobrr/netronome.git
+   cd netronome
+   ```
 
-**Q: Why do I see 0% packet loss but 100% loss at intermediate hops?**
+2. **构建前端**
 
-This is normal behavior. Intermediate routers often block/rate-limit ICMP responses for security while still forwarding traffic. Overall packet loss measures end-to-end connectivity, which is the primary indicator of network performance.
+   ```bash
+   cd web
+   npm install
+   npm run build
+   cd ..
+   ```
 
-### Agent Discovery
+3. **构建后端**
 
-**Q: Tailscale agent not discovered?**
+   ```bash
+   go build -o netronome ./cmd/netronome
+   ```
 
-- Ensure agent runs on discovery port (default 8200)
-- Verify both server and agent are on same Tailnet
-- Check connectivity: `tailscale ping <agent-hostname>`
-- Test endpoint: `curl http://<agent-hostname>:8200/netronome/info`
+4. **运行**
 
-## Building from Source
+   ```bash
+   ./netronome generate-config
+   ./netronome serve
+   ```
 
-Building Netronome creates a single binary with the frontend embedded:
+### 开发模式
 
-### With Full SMART Support (Linux/macOS)
+1. **启动后端服务器**
 
-```bash
-git clone https://github.com/autobrr/netronome
-cd netronome
-make build  # Builds frontend, embeds it, compiles Go binary
-```
+   ```bash
+   go run ./cmd/netronome serve
+   ```
 
-### Without SMART Support
+2. **启动前端开发服务器**
 
-```bash
-# First build frontend
-cd web && pnpm install && pnpm build && cd ..
-# Then build Go binary
-CGO_ENABLED=0 go build -tags nosmart -o bin/netronome ./cmd/netronome
-```
+   ```bash
+   cd web
+   npm run dev
+   ```
 
-### Docker Build
+## 贡献
 
-```bash
-make docker-build
-make docker-run
-```
+我们欢迎贡献！请遵循以下步骤：
 
-## Contributing
+1. Fork 本仓库
+2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启一个 Pull Request
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### 代码规范
 
-## License
+- 遵循 Go 代码规范
+- 为新功能添加测试
+- 更新相关文档
+- 确保所有测试通过
 
-This project is licensed under the GNU General Public License v2.0 - see the [LICENSE](LICENSE) file for details.
+## 许可证
+
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
+
+## 致谢
+
+- [Gin](https://github.com/gin-gonic/gin) - Go Web 框架
+- [React](https://reactjs.org/) - 前端框架
+- [Shoutrrr](https://containrrr.dev/shoutrrr/) - 通知服务
+- [MaxMind](https://www.maxmind.com/) - GeoIP 数据库
+
+## 联系方式
+
+- [GitHub Issues](https://github.com/autobrr/netronome/issues) - 报告问题和功能请求
+- [Discord](https://discord.gg/WehFCZxq5B) - 加入我们的社区
+
+---
+
+<p align="center">
+  <strong>Netronome</strong> - 监控、分析、告警
+</p>

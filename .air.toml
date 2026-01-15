@@ -1,46 +1,110 @@
-root = "."
-testdata_dir = "testdata"
-tmp_dir = "tmp"
+# Air 热重载配置文件
+# 用于 Go 应用程序的自动重新编译和重启
+
+root = "."           # 项目根目录
+testdata_dir = "testdata"  # 测试数据目录
+tmp_dir = "tmp"       # 临时文件目录，用于存放编译后的二进制文件
 
 [build]
+# 执行二进制文件时的参数
 args_bin = ["serve"]
+
+# 编译后的二进制文件路径
 bin = "./tmp/main"
+
+# 构建命令
 cmd = "go build -o ./tmp/main ./cmd/netronome"
+
+# 文件变更后，等待多少毫秒再构建（防抖）
 delay = 1000
+
+# 不监控的目录列表
 exclude_dir = ["assets", "tmp", "vendor", "testdata", "web", "node_modules"]
+
+# 不监控的文件列表
 exclude_file = []
+
+# 不监控的文件匹配正则表达式
 exclude_regex = ["_test.go"]
+
+# 是否排除未更改的文件（提高性能）
 exclude_unchanged = false
+
+# 是否跟随符号链接
 follow_symlink = false
+
+# 完整的二进制文件命令（如果不为空则使用此命令代替 bin + args_bin）
 full_bin = ""
+
+# 额外监控的目录列表
 include_dir = []
+
+# 监控的文件扩展名
 include_ext = ["go", "tpl", "tmpl", "html"]
+
+# 额外监控的文件列表
 include_file = []
+
+# 停止当前运行程序前的延迟时间
 kill_delay = "0s"
+
+# 构建错误日志文件
 log = "build-errors.log"
+
+# 是否使用轮询方式监控文件变化（默认使用系统事件通知）
 poll = false
+
+# 轮询间隔（毫秒），仅在 poll = true 时生效
 poll_interval = 0
+
+# 构建完成后执行的命令
 post_cmd = []
+
+# 构建开始前执行的命令
 pre_cmd = []
+
+# 是否在构建后自动重启程序
 rerun = false
+
+# 自动重启的延迟时间（毫秒）
 rerun_delay = 500
+
+# 是否发送中断信号（SIGINT）而不是杀死信号（SIGKILL）
 send_interrupt = false
+
+# 如果构建失败，是否停止当前运行的程序
 stop_on_error = false
 
 [color]
+# 应用程序输出的颜色
 app = ""
+
+# 构建过程输出的颜色
 build = "yellow"
+
+# 主程序输出的颜色
 main = "magenta"
+
+# 运行程序输出的颜色
 runner = "green"
+
+# 文件监控器输出的颜色
 watcher = "cyan"
 
 [log]
+# 是否只显示主程序的日志
 main_only = false
+
+# 日志是否包含时间戳
 time = false
 
 [misc]
+# 退出时是否清理临时目录
 clean_on_exit = false
 
 [screen]
+# 重新构建时是否清除屏幕
 clear_on_rebuild = false
+
+# 重新构建时是否保留滚动历史
 keep_scroll = true
