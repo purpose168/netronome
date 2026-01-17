@@ -1,5 +1,9 @@
-// Copyright (c) 2024-2025, s0up and the autobrr contributors.
+// 版权所有 (c) 2024-2025, s0up 和 autobrr 贡献者。
 // SPDX-License-Identifier: GPL-2.0-or-later
+//
+// 此文件包含调度系统的集成测试
+// 测试调度系统的CRUD操作、多调度器支持、不同测试类型和时间戳行为等
+// 所有测试都在SQLite和PostgreSQL两种数据库上运行
 
 package database
 
@@ -14,6 +18,18 @@ import (
 	"github.com/autobrr/netronome/internal/types"
 )
 
+// TestSchedule_CRUD 测试调度的基本CRUD操作
+// 此测试验证调度的创建、读取、更新和删除功能
+// 测试步骤：
+// 1. 创建一个新的调度
+// 2. 验证调度创建成功
+// 3. 读取所有调度并验证数量
+// 4. 更新调度信息
+// 5. 验证更新成功
+// 6. 删除调度
+// 7. 验证调度已被删除
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSchedule_CRUD(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -73,6 +89,16 @@ func TestSchedule_CRUD(t *testing.T) {
 	})
 }
 
+// TestSchedule_MultipleSchedules 测试多个调度的管理
+// 此测试验证系统支持创建和管理多个调度
+// 测试步骤：
+// 1. 创建多个不同配置的调度
+// 2. 验证所有调度都被成功创建
+// 3. 验证所有调度都能被正确检索
+// 4. 删除一个调度
+// 5. 验证剩余调度数量正确
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSchedule_MultipleSchedules(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -150,6 +176,13 @@ func TestSchedule_MultipleSchedules(t *testing.T) {
 	})
 }
 
+// TestSchedule_UpdateNonExistent 测试更新不存在的调度
+// 此测试验证系统对更新不存在调度的错误处理
+// 测试步骤：
+// 1. 尝试更新一个ID为99999的不存在调度
+// 2. 验证系统返回适当的错误
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSchedule_UpdateNonExistent(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -169,6 +202,16 @@ func TestSchedule_UpdateNonExistent(t *testing.T) {
 	})
 }
 
+// TestSchedule_DeleteNonExistent 测试删除不存在的调度
+// 此测试验证系统对删除不存在调度的处理
+// 测试步骤：
+// 1. 尝试删除一个ID为99999的不存在调度
+// 2. 验证系统不会因删除不存在的调度而崩溃
+//
+// 注意：不同数据库对DELETE操作无匹配记录的处理可能不同，
+// 有些数据库会返回错误，有些则不会，因此我们仅确保不崩溃
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSchedule_DeleteNonExistent(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -181,6 +224,14 @@ func TestSchedule_DeleteNonExistent(t *testing.T) {
 	})
 }
 
+// TestSchedule_DifferentTestTypes 测试不同类型的测试配置
+// 此测试验证调度支持不同类型的网络测试配置
+// 测试步骤：
+// 1. 创建不同测试类型的调度：iperf3、speedtest和librespeed
+// 2. 验证所有调度都能被成功创建
+// 3. 验证每种测试类型的配置都被正确保存
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSchedule_DifferentTestTypes(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -244,6 +295,14 @@ func TestSchedule_DifferentTestTypes(t *testing.T) {
 	})
 }
 
+// TestSchedule_IntervalFormats 测试不同的间隔格式
+// 此测试验证系统支持各种时间间隔格式
+// 测试步骤：
+// 1. 测试不同的时间间隔格式：分钟、小时、天和周
+// 2. 验证每种间隔格式都能被正确保存
+// 3. 创建后立即删除每个测试调度
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSchedule_IntervalFormats(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -286,6 +345,16 @@ func TestSchedule_IntervalFormats(t *testing.T) {
 	})
 }
 
+// TestSchedule_TimestampBehavior 测试时间戳的行为
+// 此测试验证调度的时间戳在更新时的行为
+// 测试步骤：
+// 1. 创建一个调度
+// 2. 记录创建时间和下次运行时间
+// 3. 等待一段时间后更新调度
+// 4. 验证创建时间保持不变
+// 5. 验证下次运行时间已更新
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSchedule_TimestampBehavior(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()

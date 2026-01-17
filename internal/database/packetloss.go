@@ -1,5 +1,9 @@
-// Copyright (c) 2024-2025, s0up and the autobrr contributors.
+// 版权所有 (c) 2024-2025, s0up 和 autobrr 贡献者。
 // SPDX-License-Identifier: GPL-2.0-or-later
+//
+// 此文件包含丢包监控系统的数据库操作接口实现
+// 提供了对packet_loss_monitors和packet_loss_results表的CRUD操作
+// 支持PostgreSQL和SQLite数据库
 
 package database
 
@@ -15,7 +19,15 @@ import (
 	"github.com/autobrr/netronome/internal/types"
 )
 
-// GetPacketLossMonitor retrieves a packet loss monitor by ID
+// GetPacketLossMonitor 根据ID获取丢包监控
+// 参数：
+//
+//	monitorID - 丢包监控的ID
+//
+// 返回值：
+//
+//	*types.PacketLossMonitor - 丢包监控对象指针
+//	error - 操作错误，如未找到返回ErrNotFound
 func (s *service) GetPacketLossMonitor(monitorID int64) (*types.PacketLossMonitor, error) {
 	query := s.sqlBuilder.
 		Select("id", "host", "name", "interval", "packet_count", "enabled", "threshold", "last_run", "next_run", "last_state", "last_state_change", "created_at", "updated_at").
@@ -49,7 +61,11 @@ func (s *service) GetPacketLossMonitor(monitorID int64) (*types.PacketLossMonito
 	return monitor, nil
 }
 
-// GetEnabledPacketLossMonitors retrieves all enabled packet loss monitors
+// GetEnabledPacketLossMonitors 获取所有启用的丢包监控
+// 返回值：
+//
+//	[]*types.PacketLossMonitor - 启用的丢包监控列表
+//	error - 操作错误
 func (s *service) GetEnabledPacketLossMonitors() ([]*types.PacketLossMonitor, error) {
 	query := s.sqlBuilder.
 		Select("id", "host", "name", "interval", "packet_count", "enabled", "threshold", "last_run", "next_run", "last_state", "last_state_change", "created_at", "updated_at").
@@ -91,7 +107,18 @@ func (s *service) GetEnabledPacketLossMonitors() ([]*types.PacketLossMonitor, er
 	return monitors, nil
 }
 
-// SavePacketLossResult saves a packet loss test result
+// SavePacketLossResult 保存丢包测试结果
+// 参数：
+//
+//	result - 丢包测试结果对象指针，保存后会自动设置ID
+//
+// 返回值：
+//
+//	error - 操作错误
+//
+// 说明：根据数据库类型使用不同的方式获取插入ID
+//   - PostgreSQL: 使用RETURNING子句
+//   - SQLite: 使用LastInsertId方法
 func (s *service) SavePacketLossResult(result *types.PacketLossResult) error {
 	var id int64
 
@@ -137,7 +164,15 @@ func (s *service) SavePacketLossResult(result *types.PacketLossResult) error {
 	return nil
 }
 
-// GetLatestPacketLossResult retrieves the most recent packet loss result for a monitor
+// GetLatestPacketLossResult 获取指定监控的最新丢包测试结果
+// 参数：
+//
+//	monitorID - 丢包监控的ID
+//
+// 返回值：
+//
+//	*types.PacketLossResult - 最新的丢包测试结果
+//	error - 操作错误，如未找到返回ErrNotFound
 func (s *service) GetLatestPacketLossResult(monitorID int64) (*types.PacketLossResult, error) {
 	query := s.sqlBuilder.
 		Select("id", "monitor_id", "packet_loss", "min_rtt", "max_rtt", "avg_rtt", "std_dev_rtt", "packets_sent", "packets_recv", "used_mtr", "hop_count", "mtr_data", "privileged_mode", "created_at").
@@ -174,7 +209,19 @@ func (s *service) GetLatestPacketLossResult(monitorID int64) (*types.PacketLossR
 	return result, nil
 }
 
-// CreatePacketLossMonitor creates a new packet loss monitor
+// CreatePacketLossMonitor 创建新的丢包监控
+// 参数：
+//
+//	monitor - 丢包监控对象指针，创建时会自动设置创建时间和更新时间
+//
+// 返回值：
+//
+//	*types.PacketLossMonitor - 创建后的丢包监控对象，包含自动生成的ID
+//	error - 操作错误
+//
+// 说明：根据数据库类型使用不同的方式获取插入ID
+//   - PostgreSQL: 使用RETURNING子句
+//   - SQLite: 使用LastInsertId方法
 func (s *service) CreatePacketLossMonitor(monitor *types.PacketLossMonitor) (*types.PacketLossMonitor, error) {
 	monitor.CreatedAt = time.Now()
 	monitor.UpdatedAt = time.Now()
@@ -205,7 +252,14 @@ func (s *service) CreatePacketLossMonitor(monitor *types.PacketLossMonitor) (*ty
 	return monitor, nil
 }
 
-// UpdatePacketLossMonitor updates an existing packet loss monitor
+// UpdatePacketLossMonitor 更新现有的丢包监控
+// 参数：
+//
+//	monitor - 丢包监控对象指针，更新时会自动设置更新时间
+//
+// 返回值：
+//
+//	error - 操作错误，如未找到返回ErrNotFound
 func (s *service) UpdatePacketLossMonitor(monitor *types.PacketLossMonitor) error {
 	monitor.UpdatedAt = time.Now()
 
@@ -242,7 +296,18 @@ func (s *service) UpdatePacketLossMonitor(monitor *types.PacketLossMonitor) erro
 	return nil
 }
 
-// DeletePacketLossMonitor deletes a packet loss monitor and its results
+// DeletePacketLossMonitor 删除丢包监控及其所有测试结果
+// 参数：
+//
+//	monitorID - 丢包监控的ID
+//
+// 返回值：
+//
+//	error - 操作错误，如未找到返回ErrNotFound
+//
+// 说明：使用事务确保原子性操作，先删除结果，再删除监控
+//
+//	这样可以避免外键约束错误
 func (s *service) DeletePacketLossMonitor(monitorID int64) error {
 	// Start a transaction to delete both monitor and results atomically
 	tx, err := s.db.Begin()
@@ -282,7 +347,11 @@ func (s *service) DeletePacketLossMonitor(monitorID int64) error {
 	return tx.Commit()
 }
 
-// GetPacketLossMonitors retrieves all packet loss monitors
+// GetPacketLossMonitors 获取所有丢包监控
+// 返回值：
+//
+//	[]*types.PacketLossMonitor - 所有丢包监控列表，按创建时间降序排列
+//	error - 操作错误
 func (s *service) GetPacketLossMonitors() ([]*types.PacketLossMonitor, error) {
 	query := s.sqlBuilder.
 		Select("id", "host", "name", "interval", "packet_count", "enabled", "threshold", "last_run", "next_run", "last_state", "last_state_change", "created_at", "updated_at").
@@ -323,7 +392,16 @@ func (s *service) GetPacketLossMonitors() ([]*types.PacketLossMonitor, error) {
 	return monitors, nil
 }
 
-// GetPacketLossResults retrieves packet loss results for a monitor
+// GetPacketLossResults 获取指定监控的丢包测试结果
+// 参数：
+//
+//	monitorID - 丢包监控的ID
+//	limit - 结果数量限制，0表示不限制
+//
+// 返回值：
+//
+//	[]*types.PacketLossResult - 丢包测试结果列表，按创建时间降序排列
+//	error - 操作错误
 func (s *service) GetPacketLossResults(monitorID int64, limit int) ([]*types.PacketLossResult, error) {
 	query := s.sqlBuilder.
 		Select("id", "monitor_id", "packet_loss", "min_rtt", "max_rtt", "avg_rtt", "std_dev_rtt", "packets_sent", "packets_recv", "used_mtr", "hop_count", "mtr_data", "privileged_mode", "created_at").
@@ -370,7 +448,15 @@ func (s *service) GetPacketLossResults(monitorID int64, limit int) ([]*types.Pac
 	return results, nil
 }
 
-// UpdatePacketLossMonitorState updates the monitor state and timestamp
+// UpdatePacketLossMonitorState 更新丢包监控的状态和时间戳
+// 参数：
+//
+//	monitorID - 丢包监控的ID
+//	state - 新的状态（如"healthy", "degraded", "critical"）
+//
+// 返回值：
+//
+//	error - 操作错误，如未找到返回ErrNotFound
 func (s *service) UpdatePacketLossMonitorState(monitorID int64, state string) error {
 	query := s.sqlBuilder.
 		Update("packet_loss_monitors").

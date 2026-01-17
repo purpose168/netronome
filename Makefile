@@ -4,19 +4,19 @@ BUILD_DIR=bin          # 构建输出目录
 DOCKER_IMAGE=netronome # Docker 镜像名称
 
 # 声明伪目标，防止与同名文件冲突
-.PHONY: all build clean run docker-build docker-run watch dev dev-expose
+.PHONY: all build clean run docker-build docker-run watch dev dev-expose go-build
 
 # 默认目标：执行构建
 all: build
 
 # 构建目标：编译前端和后端
-build: 
+build:
 	@echo "正在构建前端和后端..."
 	@mkdir -p $(BUILD_DIR)           # 创建构建输出目录
 	@mkdir -p web/dist               # 创建前端输出目录
-	@cd web && pnpm install && pnpm build  # 安装前端依赖并构建前端
+	@(cd web && pnpm install && pnpm build)  # 安装前端依赖并构建前端（使用子 shell 避免改变工作目录）
 	@touch web/dist/.gitkeep         # 创建占位文件，确保目录被 Git 跟踪
-	@go build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/netronome  # 构建后端二进制文件
+	@(cd /home/pps/github/netronome/netronome && go build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/netronome)  # 构建后端二进制文件（使用绝对路径）
 
 # 清理目标：删除构建产物和依赖
 clean:

@@ -1,5 +1,9 @@
-// Copyright (c) 2024-2025, s0up and the autobrr contributors.
+// 版权所有 (c) 2024-2025, s0up 和 autobrr 贡献者。
 // SPDX-License-Identifier: GPL-2.0-or-later
+//
+// 此文件包含测速系统的集成测试
+// 测试测速结果的保存、分页查询、时间范围过滤、不同测试类型等功能
+// 所有测试都在SQLite和PostgreSQL两种数据库上运行
 
 package database
 
@@ -15,6 +19,16 @@ import (
 	"github.com/autobrr/netronome/internal/types"
 )
 
+// TestSpeedTest_Save 测试保存测速结果
+// 此测试验证测速结果的保存功能和基本字段的正确性
+// 测试步骤：
+// 1. 创建一个测速结果对象
+// 2. 保存测速结果到数据库
+// 3. 验证保存成功并返回了正确的ID
+// 4. 验证数据库中存在该记录
+// 5. 查询返回的结果并验证创建时间已被设置
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSpeedTest_Save(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -53,6 +67,16 @@ func TestSpeedTest_Save(t *testing.T) {
 	})
 }
 
+// TestSpeedTest_GetWithPagination 测试分页获取测速结果
+// 此测试验证分页查询功能的正确性
+// 测试步骤：
+// 1. 创建25个不同的测速结果
+// 2. 使用分页查询获取第一页（10条记录）
+// 3. 验证第一页结果数量和总数
+// 4. 获取第二页和第三页并验证结果
+// 5. 验证结果按创建时间降序排列
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSpeedTest_GetWithPagination(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -107,6 +131,16 @@ func TestSpeedTest_GetWithPagination(t *testing.T) {
 	})
 }
 
+// TestSpeedTest_TimeRangeFilters 测试按时间范围过滤测速结果
+// 此测试验证不同时间范围过滤器的功能
+// 测试步骤：
+// 1. 创建4个不同时间的测速结果（1小时前、1.5天前、8天前、35天前）
+// 2. 使用"24h"过滤器查询（应返回1条记录）
+// 3. 使用"week"过滤器查询（应返回2条记录）
+// 4. 使用"month"过滤器查询（应返回3条记录）
+// 5. 使用"all"过滤器查询（应返回4条记录）
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSpeedTest_TimeRangeFilters(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -157,6 +191,15 @@ func TestSpeedTest_TimeRangeFilters(t *testing.T) {
 	})
 }
 
+// TestSpeedTest_DifferentTestTypes 测试不同类型的测速
+// 此测试验证系统支持不同类型的测速（iperf3、speedtest、librespeed）
+// 测试步骤：
+// 1. 为每种测试类型创建一个测速结果
+// 2. 验证所有测试结果都保存成功
+// 3. 查询所有测试结果
+// 4. 验证所有测试类型都存在于结果中
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSpeedTest_DifferentTestTypes(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -196,6 +239,15 @@ func TestSpeedTest_DifferentTestTypes(t *testing.T) {
 	})
 }
 
+// TestSpeedTest_ScheduledVsManual 测试计划测速与手动测速
+// 此测试验证系统能够区分计划测速和手动测速
+// 测试步骤：
+// 1. 创建一个计划测速结果（IsScheduled=true）
+// 2. 创建一个手动测速结果（IsScheduled=false）
+// 3. 验证两种测速都保存成功
+// 4. 直接查询数据库验证IsScheduled字段的值
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSpeedTest_ScheduledVsManual(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -249,6 +301,16 @@ func TestSpeedTest_ScheduledVsManual(t *testing.T) {
 	})
 }
 
+// TestSpeedTest_NullableFields 测试可空字段的处理
+// 此测试验证系统能够正确处理可空字段（如Latency和Jitter）
+// 测试步骤：
+// 1. 创建一个只有必要字段的测速结果（Latency和Jitter可能为null）
+// 2. 验证保存成功
+// 3. 查询返回的结果
+// 4. 验证必要字段的值
+// 5. 验证可空字段的处理（Jitter如果不为null，应大于等于0）
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSpeedTest_NullableFields(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()

@@ -1,6 +1,10 @@
-// Copyright (c) 2024-2025, s0up and the autobrr contributors.
+// 版权所有 (c) 2024-2025, s0up 和 autobrr 贡献者。
 // SPDX-License-Identifier: GPL-2.0-or-later
-
+//
+// 此文件包含丢包监控系统的集成测试
+// 测试范围包括丢包监控的CRUD操作、结果保存和查询等功能
+//
+// 所有测试都在SQLite和PostgreSQL两种数据库上运行，确保跨数据库兼容性
 package database
 
 import (
@@ -13,6 +17,17 @@ import (
 	"github.com/autobrr/netronome/internal/types"
 )
 
+// TestPacketLossMonitor_CRUD 测试丢包监控的CRUD操作
+// 此测试验证丢包监控的创建、查询、更新和删除功能
+// 测试步骤：
+// 1. 创建一个新的丢包监控
+// 2. 通过ID获取刚创建的监控
+// 3. 更新监控信息
+// 4. 验证更新后的监控信息
+// 5. 删除监控
+// 6. 验证监控已被删除
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestPacketLossMonitor_CRUD(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		// Create
@@ -65,6 +80,15 @@ func TestPacketLossMonitor_CRUD(t *testing.T) {
 	})
 }
 
+// TestGetEnabledPacketLossMonitors 测试获取所有启用的丢包监控
+// 此测试验证获取所有启用的丢包监控的功能
+// 测试步骤：
+// 1. 创建多个丢包监控（包括启用和禁用的）
+// 2. 获取所有启用的丢包监控
+// 3. 验证返回的监控数量是否正确
+// 4. 验证返回的所有监控都是启用状态
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestGetEnabledPacketLossMonitors(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		// Create multiple monitors
@@ -119,6 +143,15 @@ func TestGetEnabledPacketLossMonitors(t *testing.T) {
 	})
 }
 
+// TestSavePacketLossResult 测试保存丢包测试结果
+// 此测试验证保存丢包测试结果的功能
+// 测试步骤：
+// 1. 首先创建一个丢包监控
+// 2. 创建一个丢包测试结果
+// 3. 保存丢包测试结果
+// 4. 验证结果保存成功
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSavePacketLossResult(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		// Create a monitor first
@@ -150,6 +183,15 @@ func TestSavePacketLossResult(t *testing.T) {
 	})
 }
 
+// TestGetLatestPacketLossResult 测试获取最新的丢包测试结果
+// 此测试验证获取最新丢包测试结果的功能
+// 测试步骤：
+// 1. 首先创建一个丢包监控
+// 2. 保存多个不同时间的丢包测试结果
+// 3. 获取最新的丢包测试结果
+// 4. 验证返回的结果是否是最新的
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestGetLatestPacketLossResult(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		// Create a monitor
@@ -200,6 +242,16 @@ func TestGetLatestPacketLossResult(t *testing.T) {
 	})
 }
 
+// TestGetPacketLossResults 测试获取丢包测试结果
+// 此测试验证获取丢包测试结果（带数量限制）的功能
+// 测试步骤：
+// 1. 首先创建一个丢包监控
+// 2. 保存10个不同时间的丢包测试结果
+// 3. 获取最新的5个丢包测试结果
+// 4. 验证返回的结果数量是否正确
+// 5. 验证结果是否按时间降序排列（最新的在前）
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestGetPacketLossResults(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		// Create a monitor
@@ -232,6 +284,16 @@ func TestGetPacketLossResults(t *testing.T) {
 	})
 }
 
+// TestUpdatePacketLossMonitorState 测试更新丢包监控状态
+// 此测试验证更新丢包监控状态的功能
+// 测试步骤：
+// 1. 首先创建一个丢包监控
+// 2. 更新监控状态
+// 3. 获取更新后的监控
+// 4. 验证状态是否已更新
+// 5. 验证状态更新时间是否已设置
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestUpdatePacketLossMonitorState(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		// Create a monitor
@@ -250,6 +312,15 @@ func TestUpdatePacketLossMonitorState(t *testing.T) {
 	})
 }
 
+// TestPacketLossMonitor_NotFound 测试处理不存在的丢包监控
+// 此测试验证处理不存在的丢包监控的功能
+// 测试步骤：
+// 1. 尝试获取不存在的丢包监控
+// 2. 尝试更新不存在的丢包监控状态
+// 3. 尝试删除不存在的丢包监控
+// 4. 验证各种操作的错误处理
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestPacketLossMonitor_NotFound(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		// Try to get non-existent monitor
@@ -268,6 +339,17 @@ func TestPacketLossMonitor_NotFound(t *testing.T) {
 	})
 }
 
+// TestSavePacketLossResult_WithMTRData 测试保存带有MTR数据的丢包测试结果
+// 此测试验证保存带有MTR数据的丢包测试结果的功能
+// 测试步骤：
+// 1. 首先创建一个丢包监控
+// 2. 创建一个带有复杂MTR数据的丢包测试结果
+// 3. 保存丢包测试结果
+// 4. 获取最新的丢包测试结果
+// 5. 验证MTR数据是否保存成功
+// 6. 验证跳数是否正确
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestSavePacketLossResult_WithMTRData(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		// Create a monitor

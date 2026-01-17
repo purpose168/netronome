@@ -1,5 +1,10 @@
-// Copyright (c) 2024-2025, s0up and the autobrr contributors.
+// 版权所有 (c) 2024-2025, s0up 和 autobrr 贡献者。
 // SPDX-License-Identifier: GPL-2.0-or-later
+//
+// 此文件包含通知系统的集成测试
+// 测试范围包括通知频道、通知规则和通知历史记录的CRUD操作
+//
+// 所有测试都在SQLite和PostgreSQL两种数据库上运行，确保跨数据库兼容性
 
 package database
 
@@ -11,6 +16,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestNotificationChannel_CRUD 测试通知频道的CRUD操作
+// 此测试验证通知频道的创建、查询、更新和删除功能
+// 测试步骤：
+// 1. 创建一个新的通知频道
+// 2. 通过ID获取刚创建的频道
+// 3. 更新频道信息
+// 4. 删除频道
+// 5. 验证频道已被删除
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestNotificationChannel_CRUD(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -63,6 +78,15 @@ func TestNotificationChannel_CRUD(t *testing.T) {
 	})
 }
 
+// TestNotificationChannel_GetAll 测试获取所有通知频道
+// 此测试验证获取所有频道和仅获取启用频道的功能
+// 测试步骤：
+// 1. 创建多个通知频道（包括启用和禁用的）
+// 2. 获取所有通知频道并验证数量
+// 3. 获取仅启用的通知频道并验证数量
+// 4. 验证返回的启用频道确实都是启用状态
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestNotificationChannel_GetAll(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -109,6 +133,18 @@ func TestNotificationChannel_GetAll(t *testing.T) {
 	})
 }
 
+// TestNotificationRule_CRUD 测试通知规则的CRUD操作
+// 此测试验证通知规则的创建、查询、更新和删除功能
+// 测试步骤：
+// 1. 首先创建一个通知频道
+// 2. 获取一个速度测试事件
+// 3. 创建一个通知规则
+// 4. 通过ID获取刚创建的规则
+// 5. 更新规则信息
+// 6. 删除规则
+// 7. 验证规则已被删除
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestNotificationRule_CRUD(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -177,6 +213,15 @@ func TestNotificationRule_CRUD(t *testing.T) {
 	})
 }
 
+// TestNotificationRule_GetByChannel 测试按频道获取通知规则
+// 此测试验证可以按频道ID获取该频道的所有通知规则
+// 测试步骤：
+// 1. 创建两个通知频道
+// 2. 获取不同类型的事件
+// 3. 为第一个频道创建两条规则，为第二个频道创建一条规则
+// 4. 分别按频道ID获取规则并验证数量
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestNotificationRule_GetByChannel(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -238,6 +283,15 @@ func TestNotificationRule_GetByChannel(t *testing.T) {
 	})
 }
 
+// TestNotificationEvent_GetByCategory 测试按类别获取通知事件
+// 此测试验证可以按类别获取不同类型的通知事件
+// 测试步骤：
+// 1. 获取速度测试类别的事件
+// 2. 验证返回的事件确实都是速度测试类别
+// 3. 获取丢包类别的事件
+// 4. 获取代理类别的事件
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestNotificationEvent_GetByCategory(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -265,6 +319,19 @@ func TestNotificationEvent_GetByCategory(t *testing.T) {
 	})
 }
 
+// TestNotificationRule_EnabledNotifications 测试启用的通知规则
+// 此测试验证仅返回同时满足频道和规则都启用的通知规则
+// 测试步骤：
+// 1. 创建一个启用的频道和一个禁用的频道
+// 2. 获取不同类型的事件
+// 3. 创建不同组合的规则：
+//   - 启用频道 + 启用规则
+//   - 禁用频道 + 启用规则
+//   - 启用频道 + 禁用规则
+//
+// 4. 验证获取到的启用规则只包含频道和规则都启用的组合
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestNotificationRule_EnabledNotifications(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -335,6 +402,17 @@ func TestNotificationRule_EnabledNotifications(t *testing.T) {
 	})
 }
 
+// TestNotificationHistory_Create 测试通知历史记录的创建
+// 此测试验证可以记录通知发送尝试的历史记录
+// 测试步骤：
+// 1. 创建一个通知频道
+// 2. 获取一个速度测试事件
+// 3. 记录一条成功的通知尝试
+// 4. 记录一条失败的通知尝试
+// 5. 获取通知历史记录并验证记录数量
+// 6. 验证成功和失败记录的属性
+//
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestNotificationHistory_Create(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -393,6 +471,15 @@ func TestNotificationHistory_Create(t *testing.T) {
 	})
 }
 
+// TestNotification_CheckThreshold 测试通知阈值检查功能
+// 此测试验证不同阈值运算符的正确性
+// 测试步骤：
+// 1. 定义多个测试用例，包括不同的运算符、阈值和值
+// 2. 遍历所有测试用例，验证CheckThreshold函数的返回结果是否符合预期
+// 3. 测试无阈值的情况，验证是否始终返回true
+//
+// 测试的运算符包括：gt(大于)、lt(小于)、eq(等于)、gte(大于等于)、lte(小于等于)
+// 该测试在SQLite和PostgreSQL两种数据库上运行
 func TestNotification_CheckThreshold(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
@@ -440,7 +527,16 @@ func TestNotification_CheckThreshold(t *testing.T) {
 	})
 }
 
-// Helper function for float64 pointers
+// float64Ptr 创建一个float64类型的指针
+// 参数：
+//
+//	f: 要创建指针的float64值
+//
+// 返回值：
+//
+//	*float64: 指向f的指针
+//
+// 这是一个辅助函数，用于在测试中创建float64类型的指针
 func float64Ptr(f float64) *float64 {
 	return &f
 }

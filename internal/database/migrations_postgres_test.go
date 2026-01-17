@@ -1,4 +1,4 @@
-// Copyright (c) 2024-2025, s0up and the autobrr contributors.
+// 版权所有 (c) 2024-2025, s0up 和 autobrr 贡献者。
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 package database
@@ -16,16 +16,17 @@ import (
 	"github.com/autobrr/netronome/internal/config"
 )
 
-// TestPostgreSQL_MigrationValidation validates PostgreSQL-specific features
+// TestPostgreSQL_MigrationValidation 验证 PostgreSQL 特定功能的迁移
+// 仅针对 PostgreSQL 数据库运行此测试
 func TestPostgreSQL_MigrationValidation(t *testing.T) {
-	// Only run for PostgreSQL
+	// 仅为 PostgreSQL 设置测试数据库
 	td := SetupTestDatabase(t, config.Postgres)
-	defer td.Close()
+	defer td.Close() // 确保测试结束后关闭数据库连接
 
-	ctx := context.Background()
+	ctx := context.Background() // 创建上下文用于数据库操作
 
 	t.Run("ValidateDataTypes", func(t *testing.T) {
-		// Verify PostgreSQL-specific data types
+		// 验证 PostgreSQL 特定的数据类型
 		rows, err := td.DB.QueryContext(ctx, `
 			SELECT 
 				table_name,
@@ -38,9 +39,10 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 			AND table_name NOT IN ('schema_migrations')
 			ORDER BY table_name, ordinal_position
 		`)
-		require.NoError(t, err)
-		defer rows.Close()
+		require.NoError(t, err) // 确保查询执行成功
+		defer rows.Close()      // 确保函数退出时关闭结果集
 
+		// 收集所有表的数据类型信息
 		dataTypes := make(map[string][]string)
 		for rows.Next() {
 			var tableName, columnName, dataType, isNullable string
@@ -48,34 +50,37 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 			err := rows.Scan(&tableName, &columnName, &dataType, &isNullable, &columnDefault)
 			require.NoError(t, err)
 
+			// 保存表名和列名:数据类型的映射
 			dataTypes[tableName] = append(dataTypes[tableName],
 				fmt.Sprintf("%s:%s", columnName, dataType))
 		}
 
-		// Log some data types for debugging
+		// 记录一些数据类型信息用于调试
 		for table, types := range dataTypes {
 			if table == "users" || table == "packet_loss_monitors" {
-				t.Logf("Table %s columns: %v", table, types)
+				t.Logf("表 %s 的列: %v", table, types)
 			}
 		}
 
-		// Verify expected data types (be flexible with integer types)
+		// 验证预期的数据类型（对整数类型保持灵活）
 		hasUserID := false
 		hasUserCreatedAt := false
 		hasPacketLossEnabled := false
 		hasPacketLossThreshold := false
 
+		// 检查 users 表的数据类型
 		for _, col := range dataTypes["users"] {
 			if strings.HasPrefix(col, "id:") && strings.Contains(col, "int") {
 				hasUserID = true
 			}
 			if strings.HasPrefix(col, "created_at:timestamp") {
 				hasUserCreatedAt = true
-				// Note: The schema uses "timestamp without time zone" instead of "with time zone"
-				// This might be intentional or could be improved for timezone handling
+				// 注意：模式使用 "timestamp without time zone" 而不是 "with time zone"
+				// 这可能是有意的，也可能在时区处理方面需要改进
 			}
 		}
 
+		// 检查 packet_loss_monitors 表的数据类型
 		for _, col := range dataTypes["packet_loss_monitors"] {
 			if col == "enabled:boolean" {
 				hasPacketLossEnabled = true
@@ -85,14 +90,15 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 			}
 		}
 
-		assert.True(t, hasUserID, "users table should have integer id")
-		assert.True(t, hasUserCreatedAt, "users table should have timestamp created_at")
-		assert.True(t, hasPacketLossEnabled, "packet_loss_monitors should have boolean enabled")
-		assert.True(t, hasPacketLossThreshold, "packet_loss_monitors should have real/double precision threshold")
+		// 验证必要的数据类型是否存在
+		assert.True(t, hasUserID, "users 表应该有 integer 类型的 id 列")
+		assert.True(t, hasUserCreatedAt, "users 表应该有 timestamp 类型的 created_at 列")
+		assert.True(t, hasPacketLossEnabled, "packet_loss_monitors 表应该有 boolean 类型的 enabled 列")
+		assert.True(t, hasPacketLossThreshold, "packet_loss_monitors 表应该有 real/double precision 类型的 threshold 列")
 	})
 
 	t.Run("ValidateForeignKeys", func(t *testing.T) {
-		// Get all foreign key constraints
+		// 获取所有外键约束
 		rows, err := td.DB.QueryContext(ctx, `
 			SELECT 
 				tc.table_name,
@@ -112,34 +118,36 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 			WHERE tc.constraint_type = 'FOREIGN KEY' 
 			AND tc.table_schema = 'public'
 		`)
-		require.NoError(t, err)
-		defer rows.Close()
+		require.NoError(t, err) // 确保查询执行成功
+		defer rows.Close()      // 确保函数退出时关闭结果集
 
-		fkCount := 0
-		cascadeDeletes := []string{}
+		fkCount := 0                 // 外键约束数量
+		cascadeDeletes := []string{} // 级联删除关系列表
 
+		// 遍历所有外键约束
 		for rows.Next() {
 			var tableName, columnName, foreignTable, foreignColumn, deleteRule string
 			err := rows.Scan(&tableName, &columnName, &foreignTable, &foreignColumn, &deleteRule)
 			require.NoError(t, err)
 
 			fkCount++
+			// 记录级联删除关系
 			if deleteRule == "CASCADE" {
 				cascadeDeletes = append(cascadeDeletes,
 					fmt.Sprintf("%s.%s -> %s.%s", tableName, columnName, foreignTable, foreignColumn))
 			}
 
-			t.Logf("FK: %s.%s -> %s.%s (DELETE %s)",
+			t.Logf("外键: %s.%s -> %s.%s (DELETE %s)",
 				tableName, columnName, foreignTable, foreignColumn, deleteRule)
 		}
 
-		// Verify we have foreign keys
-		assert.Greater(t, fkCount, 5, "Should have multiple foreign key constraints")
-		assert.NotEmpty(t, cascadeDeletes, "Should have CASCADE DELETE relationships")
+		// 验证外键约束数量
+		assert.Greater(t, fkCount, 5, "应该有多个外键约束")
+		assert.NotEmpty(t, cascadeDeletes, "应该有 CASCADE DELETE 关系")
 	})
 
 	t.Run("ValidateIndexes", func(t *testing.T) {
-		// Get all indexes
+		// 获取所有索引
 		rows, err := td.DB.QueryContext(ctx, `
 			SELECT 
 				schemaname,
@@ -151,10 +159,10 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 			AND indexname NOT LIKE '%_pkey'
 			ORDER BY tablename, indexname
 		`)
-		require.NoError(t, err)
-		defer rows.Close()
+		require.NoError(t, err) // 确保查询执行成功
+		defer rows.Close()      // 确保函数退出时关闭结果集
 
-		indexes := make(map[string][]string)
+		indexes := make(map[string][]string) // 按表名分组的索引列表
 		for rows.Next() {
 			var schema, table, indexName, indexDef string
 			err := rows.Scan(&schema, &table, &indexName, &indexDef)
@@ -162,29 +170,29 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 
 			indexes[table] = append(indexes[table], indexName)
 
-			// Check for important patterns
+			// 检查重要的索引模式
 			if strings.Contains(indexDef, "UNIQUE") {
-				t.Logf("Unique index: %s on %s", indexName, table)
+				t.Logf("唯一索引: %s 在 %s 表上", indexName, table)
 			}
 		}
 
-		// Verify we have indexes
-		assert.NotEmpty(t, indexes, "Should have indexes")
+		// 验证存在索引
+		assert.NotEmpty(t, indexes, "应该存在索引")
 
-		// Check for specific tables having indexes
+		// 检查特定表是否有索引
 		if indices, ok := indexes["packet_loss_results"]; ok {
-			assert.NotEmpty(t, indices, "packet_loss_results should have indexes")
-			t.Logf("packet_loss_results indexes: %v", indices)
+			assert.NotEmpty(t, indices, "packet_loss_results 表应该有索引")
+			t.Logf("packet_loss_results 表的索引: %v", indices)
 		}
 
 		if indices, ok := indexes["notification_rules"]; ok {
-			assert.NotEmpty(t, indices, "notification_rules should have indexes")
-			t.Logf("notification_rules indexes: %v", indices)
+			assert.NotEmpty(t, indices, "notification_rules 表应该有索引")
+			t.Logf("notification_rules 表的索引: %v", indices)
 		}
 	})
 
 	t.Run("ValidateTriggers", func(t *testing.T) {
-		// Check for update timestamp triggers
+		// 检查更新时间戳触发器
 		rows, err := td.DB.QueryContext(ctx, `
 			SELECT 
 				trigger_name,
@@ -194,11 +202,11 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 			FROM information_schema.triggers
 			WHERE trigger_schema = 'public'
 		`)
-		require.NoError(t, err)
-		defer rows.Close()
+		require.NoError(t, err) // 确保查询执行成功
+		defer rows.Close()      // 确保函数退出时关闭结果集
 
-		triggerCount := 0
-		updateTriggers := []string{}
+		triggerCount := 0            // 触发器数量
+		updateTriggers := []string{} // 更新触发器列表
 
 		for rows.Next() {
 			var triggerName, tableName, timing, event string
@@ -206,12 +214,13 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 			require.NoError(t, err)
 
 			triggerCount++
+			// 收集更新触发器
 			if strings.Contains(triggerName, "update") && event == "UPDATE" {
 				updateTriggers = append(updateTriggers, tableName)
 			}
 		}
 
-		// Verify update triggers exist for tables with updated_at
+		// 验证具有 updated_at 列的表存在更新触发器
 		if triggerCount > 0 {
 			assert.Contains(t, updateTriggers, "notification_channels")
 			assert.Contains(t, updateTriggers, "notification_rules")
@@ -219,7 +228,7 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 	})
 
 	t.Run("ValidateCheckConstraints", func(t *testing.T) {
-		// Get check constraints
+		// 获取检查约束
 		rows, err := td.DB.QueryContext(ctx, `
 			SELECT 
 				tc.table_name,
@@ -232,20 +241,21 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 			WHERE tc.constraint_type = 'CHECK'
 			AND tc.table_schema = 'public'
 		`)
-		require.NoError(t, err)
-		defer rows.Close()
+		require.NoError(t, err) // 确保查询执行成功
+		defer rows.Close()      // 确保函数退出时关闭结果集
 
+		// 遍历所有检查约束
 		for rows.Next() {
 			var tableName, constraintName, checkClause string
 			err := rows.Scan(&tableName, &constraintName, &checkClause)
 			require.NoError(t, err)
 
-			t.Logf("Check constraint on %s: %s - %s", tableName, constraintName, checkClause)
+			t.Logf("表 %s 上的检查约束: %s - %s", tableName, constraintName, checkClause)
 		}
 	})
 
 	t.Run("ValidateSequences", func(t *testing.T) {
-		// Verify sequences for SERIAL columns
+		// 验证 SERIAL 列的序列
 		rows, err := td.DB.QueryContext(ctx, `
 			SELECT 
 				sequence_name,
@@ -254,55 +264,56 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 			FROM information_schema.sequences
 			WHERE sequence_schema = 'public'
 		`)
-		require.NoError(t, err)
-		defer rows.Close()
+		require.NoError(t, err) // 确保查询执行成功
+		defer rows.Close()      // 确保函数退出时关闭结果集
 
-		sequenceCount := 0
+		sequenceCount := 0 // 序列数量
 		for rows.Next() {
 			var seqName string
 			var startValue, increment sql.NullInt64
 			err := rows.Scan(&seqName, &startValue, &increment)
 			require.NoError(t, err)
 			sequenceCount++
-			t.Logf("Sequence: %s (start: %d, increment: %d)", seqName, startValue.Int64, increment.Int64)
+			t.Logf("序列: %s (起始值: %d, 增量: %d)", seqName, startValue.Int64, increment.Int64)
 		}
 
-		// Each table with SERIAL primary key should have a sequence
-		assert.Greater(t, sequenceCount, 10, "Should have sequences for SERIAL columns")
+		// 每个具有 SERIAL 主键的表都应该有一个序列
+		assert.Greater(t, sequenceCount, 10, "应该为 SERIAL 列创建序列")
 	})
 
 	t.Run("TestTransactionIsolation", func(t *testing.T) {
-		// Test that transactions work properly
+		// 测试事务是否正常工作
 		tx, err := td.DB.BeginTx(ctx, nil)
-		require.NoError(t, err)
-		defer tx.Rollback()
+		require.NoError(t, err) // 确保事务开始成功
+		defer tx.Rollback()     // 确保函数退出时回滚事务（除非显式提交）
 
-		// Insert test data in transaction
+		// 在事务中插入测试数据
 		_, err = tx.Exec(`
 			INSERT INTO users (username, password_hash) 
 			VALUES ($1, $2)
 		`, "tx_test_user", "hash")
-		require.NoError(t, err)
+		require.NoError(t, err) // 确保插入成功
 
-		// Verify data is visible in transaction
+		// 验证数据在事务中可见
 		var count int
 		err = tx.QueryRow("SELECT COUNT(*) FROM users WHERE username = $1", "tx_test_user").Scan(&count)
 		require.NoError(t, err)
-		assert.Equal(t, 1, count)
+		assert.Equal(t, 1, count) // 事务内应该能看到插入的数据
 
-		// Rollback and verify data is gone
+		// 回滚并验证数据已消失
 		err = tx.Rollback()
-		require.NoError(t, err)
+		require.NoError(t, err) // 确保回滚成功
 
+		// 验证数据已从数据库中删除
 		err = td.DB.QueryRow("SELECT COUNT(*) FROM users WHERE username = $1", "tx_test_user").Scan(&count)
 		require.NoError(t, err)
-		assert.Equal(t, 0, count)
+		assert.Equal(t, 0, count) // 回滚后数据应该不存在
 	})
 
 	t.Run("ValidatePerformanceFeatures", func(t *testing.T) {
-		// Check for performance-related settings
+		// 检查与性能相关的设置
 
-		// Verify important indexes exist
+		// 验证重要索引存在
 		var indexCount int
 		err := td.DB.QueryRow(`
 			SELECT COUNT(*) 
@@ -311,46 +322,48 @@ func TestPostgreSQL_MigrationValidation(t *testing.T) {
 			AND tablename = 'packet_loss_results'
 		`).Scan(&indexCount)
 		require.NoError(t, err)
-		assert.GreaterOrEqual(t, indexCount, 2, "packet_loss_results should have indexes for performance")
+		assert.GreaterOrEqual(t, indexCount, 2, "packet_loss_results 表应该有性能相关的索引")
 
-		// Check for partial indexes or other optimizations
+		// 检查部分索引或其他优化
 		rows, err := td.DB.QueryContext(ctx, `
 			SELECT indexdef 
 			FROM pg_indexes 
 			WHERE schemaname = 'public'
 			AND indexdef LIKE '%WHERE%'
 		`)
-		require.NoError(t, err)
-		defer rows.Close()
+		require.NoError(t, err) // 确保查询执行成功
+		defer rows.Close()      // 确保函数退出时关闭结果集
 
+		// 遍历所有部分索引
 		for rows.Next() {
 			var indexDef string
 			err := rows.Scan(&indexDef)
 			require.NoError(t, err)
-			t.Logf("Partial index found: %s", indexDef)
+			t.Logf("发现部分索引: %s", indexDef)
 		}
 	})
 }
 
-// TestMigrationRollbackPrevention ensures migrations can't be rolled back
+// TestMigrationRollbackPrevention 确保迁移不能被回滚
+// 在两种数据库(SQLite 和 PostgreSQL)上运行此测试
 func TestMigrationRollbackPrevention(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
-		// Try to delete from schema_migrations (should fail in production)
-		// This is just to document expected behavior
+		// 尝试从 schema_migrations 删除（在生产环境中应该失败）
+		// 这只是为了记录预期行为
 
 		var count int
 		err := td.DB.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count)
 		require.NoError(t, err)
-		assert.Greater(t, count, 0, "Should have migrations")
+		assert.Greater(t, count, 0, "应该有迁移记录")
 
-		// In a production system, this should be prevented by permissions
-		// For testing, we just verify the table exists and has entries
+		// 在生产系统中，这应该由权限阻止
+		// 对于测试，我们只验证表存在并包含记录
 	})
 }
 
-// TestMigrationIdempotency verifies migrations can be run multiple times safely
+// TestMigrationIdempotency 验证迁移可以安全地多次运行
 func TestMigrationIdempotency(t *testing.T) {
-	// This test would require access to the migration runner
-	// Currently we can only verify that migrations were applied once
-	t.Skip("Requires migration runner access")
+	// 此测试需要访问迁移运行器
+	// 当前我们只能验证迁移已应用一次
+	t.Skip("需要访问迁移运行器")
 }

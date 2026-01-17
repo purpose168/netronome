@@ -1,6 +1,22 @@
 // Copyright (c) 2024-2025, s0up and the autobrr contributors.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+// 数据库级联删除集成测试
+// 该文件包含了 Netronome 项目中数据库级联删除功能的集成测试
+// 主要验证删除父记录时，相关的子记录能否正确地被级联删除
+//
+// 测试内容包括：
+// 1. 丢包监视器 (PacketLossMonitor) 的级联删除
+// 2. 监控代理 (MonitorAgent) 的级联删除
+// 3. 通知渠道 (NotificationChannel) 的级联删除
+// 4. 通知事件 (NotificationEvent) 的级联删除（已跳过，因为事件是种子数据）
+// 5. 级联删除的性能测试
+//
+// 测试方法：
+// - 所有测试都在 SQLite 和 PostgreSQL 两种数据库上运行
+// - 使用 RunTestWithBothDatabases 函数确保兼容性
+// - 验证数据创建、读取、删除的完整流程
+// - 验证级联删除后相关数据的完整性
 package database
 
 import (
@@ -14,254 +30,277 @@ import (
 	"github.com/autobrr/netronome/internal/types"
 )
 
-// TestPacketLossMonitor_CascadeDelete verifies that deleting a monitor removes all its results
+// TestPacketLossMonitor_CascadeDelete 测试丢包监视器的级联删除功能
+// 该函数验证当删除一个丢包监视器时，它的所有结果记录是否会被正确级联删除
+// 测试在 SQLite 和 PostgreSQL 两种数据库上运行，确保跨数据库兼容性
 func TestPacketLossMonitor_CascadeDelete(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
-		// Create a monitor
+		// 创建一个测试用的丢包监视器
 		monitor := CreateTestPacketLossMonitor(t, td)
 
-		// Create multiple results for the monitor
+		// 为该监视器创建5个测试结果
 		resultIDs := make([]int64, 5)
 		for i := 0; i < 5; i++ {
+			// 创建MTR数据（网络路径数据）
 			mtrData := `{"hops": [{"addr": "192.168.1.1", "loss": 0}]}`
+			// 构建丢包结果对象
 			result := &types.PacketLossResult{
-				MonitorID:   monitor.ID,
-				PacketLoss:  float64(i),
-				MinRTT:      10.0 + float64(i),
-				MaxRTT:      20.0 + float64(i),
-				AvgRTT:      15.0 + float64(i),
-				PacketsSent: 10,
-				PacketsRecv: 10 - i,
-				MTRData:     &mtrData,
-				UsedMTR:     true,
-				HopCount:    1,
-				CreatedAt:   time.Now().Add(time.Duration(-i) * time.Hour),
+				MonitorID:   monitor.ID,                                    // 关联到刚创建的监视器
+				PacketLoss:  float64(i),                                    // 丢包率从0%到4%
+				MinRTT:      10.0 + float64(i),                             // 最小往返时间递增
+				MaxRTT:      20.0 + float64(i),                             // 最大往返时间递增
+				AvgRTT:      15.0 + float64(i),                             // 平均往返时间递增
+				PacketsSent: 10,                                            // 发送的数据包数量
+				PacketsRecv: 10 - i,                                        // 接收的数据包数量（递减，模拟不同的丢包情况）
+				MTRData:     &mtrData,                                      // 网络路径数据
+				UsedMTR:     true,                                          // 是否使用了MTR功能
+				HopCount:    1,                                             // 跳数
+				CreatedAt:   time.Now().Add(time.Duration(-i) * time.Hour), // 创建时间（每小时递减）
 			}
 
+			// 保存丢包结果到数据库
 			err := td.Service.SavePacketLossResult(result)
 			require.NoError(t, err)
+			// 记录创建的结果ID，用于后续验证
 			resultIDs[i] = result.ID
 		}
 
-		// Verify all results exist
+		// 验证所有结果都已成功创建
 		for _, id := range resultIDs {
 			AssertRecordExists(t, td, "packet_loss_results", "id", id)
 		}
 
-		// Verify we can retrieve results for the monitor
+		// 验证可以通过监视器ID检索到所有结果
 		results, err := td.Service.GetPacketLossResults(monitor.ID, 10)
 		require.NoError(t, err)
-		assert.Len(t, results, 5)
+		assert.Len(t, results, 5) // 应该有5个结果
 
-		// Delete the monitor
+		// 删除监视器
 		err = td.Service.DeletePacketLossMonitor(monitor.ID)
 		require.NoError(t, err)
 
-		// Verify monitor is deleted
+		// 验证监视器已被删除
 		AssertRecordNotExists(t, td, "packet_loss_monitors", "id", monitor.ID)
 
-		// Verify all results are cascade deleted
+		// 验证所有结果都已被级联删除
 		for _, id := range resultIDs {
 			AssertRecordNotExists(t, td, "packet_loss_results", "id", id)
 		}
 
-		// Double-check by trying to retrieve results
+		// 再次检查：尝试通过监视器ID检索结果，应该为空
 		results, err = td.Service.GetPacketLossResults(monitor.ID, 10)
 		require.NoError(t, err)
-		assert.Empty(t, results)
+		assert.Empty(t, results) // 结果列表应该为空
 	})
 }
 
-// TestMonitorAgent_CascadeDelete verifies that deleting an agent removes all its data
+// TestMonitorAgent_CascadeDelete 测试监控代理的级联删除功能
+// 该函数验证当删除一个监控代理时，它的所有相关数据（资源统计、峰值统计、历史快照）是否会被正确级联删除
+// 测试在 SQLite 和 PostgreSQL 两种数据库上运行，确保跨数据库兼容性
 func TestMonitorAgent_CascadeDelete(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
 
-		// Create an agent
+		// 创建一个测试用的监控代理
 		agent := &types.MonitorAgent{
-			Name:    "Cascade Delete Test Agent",
+			Name:    "级联删除测试代理",
 			URL:     "http://test-agent.local",
 			APIKey:  stringPtr("test-api-key"),
 			Enabled: true,
 		}
 
+		// 保存代理到数据库
 		created, err := td.Service.CreateMonitorAgent(ctx, agent)
 		require.NoError(t, err)
 
-		// Save various types of data for the agent
+		// 为该代理保存各种类型的数据
 
-		// 1. Resource stats
+		// 1. 资源统计数据（CPU、内存、磁盘等）
 		resourceStats := &types.MonitorResourceStats{
-			CPUUsagePercent:   25.5,
-			MemoryUsedPercent: 45.5,
-			SwapUsedPercent:   10.0,
-			DiskUsageJSON:     `[{"path":"/","total":100000000000,"used":50000000000,"free":50000000000,"usedPercent":50.0}]`,
-			TemperatureJSON:   `[{"sensorKey":"cpu","temperature":55.0}]`,
-			UptimeSeconds:     3600,
+			CPUUsagePercent:   25.5,                                                                                           // CPU使用率25.5%
+			MemoryUsedPercent: 45.5,                                                                                           // 内存使用率45.5%
+			SwapUsedPercent:   10.0,                                                                                           // 交换分区使用率10.0%
+			DiskUsageJSON:     `[{"path":"/","total":100000000000,"used":50000000000,"free":50000000000,"usedPercent":50.0}]`, // 磁盘使用情况
+			TemperatureJSON:   `[{"sensorKey":"cpu","temperature":55.0}]`,                                                     // CPU温度55.0°C
+			UptimeSeconds:     3600,                                                                                           // 运行时间3600秒（1小时）
 		}
 
+		// 保存资源统计数据
 		err = td.Service.SaveMonitorResourceStats(ctx, created.ID, resourceStats)
 		require.NoError(t, err)
 
-		// 2. Peak stats
+		// 2. 峰值统计数据（网络流量峰值）
 		now := time.Now()
 		peakStats := &types.MonitorPeakStats{
-			PeakRxBytes:     1000000000,
-			PeakTxBytes:     500000000,
-			PeakRxTimestamp: &now,
-			PeakTxTimestamp: &now,
+			PeakRxBytes:     1000000000, // 峰值接收字节数（1GB）
+			PeakTxBytes:     500000000,  // 峰值发送字节数（500MB）
+			PeakRxTimestamp: &now,       // 峰值接收时间戳
+			PeakTxTimestamp: &now,       // 峰值发送时间戳
 		}
 
+		// 更新或插入峰值统计数据
 		err = td.Service.UpsertMonitorPeakStats(ctx, created.ID, peakStats)
 		require.NoError(t, err)
 
-		// 3. Historical snapshot
+		// 3. 历史快照数据
 		snapshot := &types.MonitorHistoricalSnapshot{
-			PeriodType: "daily",
-			DataJSON:   `{"detailed": "stats"}`,
+			PeriodType: "daily",                 // 周期类型：每日
+			DataJSON:   `{"detailed": "stats"}`, // 快照数据内容
 		}
 
+		// 保存历史快照
 		err = td.Service.SaveMonitorHistoricalSnapshot(ctx, created.ID, snapshot)
 		require.NoError(t, err)
 
-		// Verify all data exists
+		// 验证所有数据都已成功创建
 		AssertRecordExists(t, td, "monitor_agents", "id", created.ID)
 		AssertRecordExists(t, td, "monitor_resource_stats", "agent_id", created.ID)
 		AssertRecordExists(t, td, "monitor_peak_stats", "agent_id", created.ID)
 		AssertRecordExists(t, td, "monitor_historical_snapshots", "agent_id", created.ID)
 
-		// Verify we can retrieve the data
+		// 验证可以通过代理ID检索到所有数据
 
-		// Use 24 hours to avoid timezone issues with SQLite
+		// 使用24小时避免SQLite的时区问题
 		retrievedStats, err := td.Service.GetMonitorResourceStats(ctx, created.ID, 24)
 		require.NoError(t, err)
-		assert.Len(t, retrievedStats, 1)
+		assert.Len(t, retrievedStats, 1) // 应该有1条资源统计记录
 
+		// 验证可以获取峰值统计数据
 		retrievedPeaks, err := td.Service.GetMonitorPeakStats(ctx, created.ID)
 		require.NoError(t, err)
-		assert.NotNil(t, retrievedPeaks)
+		assert.NotNil(t, retrievedPeaks) // 应该返回非空的峰值统计数据
 
+		// 验证可以获取历史快照
 		retrievedSnapshot, err := td.Service.GetMonitorLatestSnapshot(ctx, created.ID, "daily")
 		require.NoError(t, err)
-		assert.NotNil(t, retrievedSnapshot)
+		assert.NotNil(t, retrievedSnapshot) // 应该返回非空的历史快照
 
-		// Delete the agent
+		// 删除监控代理
 		err = td.Service.DeleteMonitorAgent(ctx, created.ID)
 		require.NoError(t, err)
 
-		// Verify agent is deleted
+		// 验证代理已被删除
 		AssertRecordNotExists(t, td, "monitor_agents", "id", created.ID)
 
-		// Verify all related data is cascade deleted
+		// 验证所有相关数据都已被级联删除
 		AssertRecordNotExists(t, td, "monitor_resource_stats", "agent_id", created.ID)
 		AssertRecordNotExists(t, td, "monitor_peak_stats", "agent_id", created.ID)
 		AssertRecordNotExists(t, td, "monitor_historical_snapshots", "agent_id", created.ID)
 
-		// Double-check by trying to retrieve data
+		// 再次检查：尝试检索数据，验证确实已删除
 
-		// Use 24 hours to avoid timezone issues with SQLite
+		// 使用24小时避免SQLite的时区问题
 		retrievedStats, err = td.Service.GetMonitorResourceStats(ctx, created.ID, 24)
 		require.NoError(t, err)
-		assert.Empty(t, retrievedStats)
+		assert.Empty(t, retrievedStats) // 资源统计应该为空
 
+		// 尝试获取峰值统计，应该返回错误
 		retrievedPeaks, err = td.Service.GetMonitorPeakStats(ctx, created.ID)
-		assert.ErrorIs(t, err, ErrNotFound)
-		assert.Nil(t, retrievedPeaks)
+		assert.ErrorIs(t, err, ErrNotFound) // 应该返回"未找到"错误
+		assert.Nil(t, retrievedPeaks)       // 应该返回nil
 
+		// 尝试获取历史快照，应该返回错误
 		retrievedSnapshot, err = td.Service.GetMonitorLatestSnapshot(ctx, created.ID, "daily")
-		assert.ErrorIs(t, err, ErrNotFound)
-		assert.Nil(t, retrievedSnapshot)
+		assert.ErrorIs(t, err, ErrNotFound) // 应该返回"未找到"错误
+		assert.Nil(t, retrievedSnapshot)    // 应该返回nil
 	})
 }
 
-// TestNotificationChannel_CascadeDelete verifies that deleting a channel removes rules and history
+// TestNotificationChannel_CascadeDelete 测试通知渠道的级联删除功能
+// 该函数验证当删除一个通知渠道时，它的所有规则和历史记录是否会被正确级联删除
+// 同时确保其他通知渠道不受影响
+// 测试在 SQLite 和 PostgreSQL 两种数据库上运行，确保跨数据库兼容性
 func TestNotificationChannel_CascadeDelete(t *testing.T) {
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
 		ctx := context.Background()
 		_ = ctx
 
-		// Create notification channels
+		// 创建两个通知渠道
 		channel1, err := td.Service.CreateChannel(NotificationChannelInput{
-			Name:    "Cascade Test Channel 1",
+			Name:    "级联测试渠道 1",
 			URL:     "https://webhook.example.com/1",
 			Enabled: boolPtr(true),
 		})
 		require.NoError(t, err)
 
 		channel2, err := td.Service.CreateChannel(NotificationChannelInput{
-			Name:    "Cascade Test Channel 2",
+			Name:    "级联测试渠道 2",
 			URL:     "https://webhook.example.com/2",
 			Enabled: boolPtr(true),
 		})
 		require.NoError(t, err)
 
-		// Get notification events
+		// 获取不同类型的通知事件
+		// 测速完成事件
 		speedtestEvent, err := td.Service.GetEventByType(NotificationCategorySpeedtest, NotificationEventSpeedtestComplete)
 		require.NoError(t, err)
 
+		// 丢包率高事件
 		packetlossEvent, err := td.Service.GetEventByType(NotificationCategoryPacketLoss, NotificationEventPacketLossHigh)
 		require.NoError(t, err)
 
+		// 代理离线事件
 		agentEvent, err := td.Service.GetEventByType(NotificationCategoryAgent, NotificationEventAgentOffline)
 		require.NoError(t, err)
 
-		// Create rules for channel 1
+		// 为渠道1创建多个规则
 		rule1, err := td.Service.CreateRule(NotificationRuleInput{
-			ChannelID: channel1.ID,
-			EventID:   speedtestEvent.ID,
-			Enabled:   boolPtr(true),
+			ChannelID: channel1.ID,       // 关联到渠道1
+			EventID:   speedtestEvent.ID, // 测速完成事件
+			Enabled:   boolPtr(true),     // 启用规则
 		})
 		require.NoError(t, err)
 
 		rule2, err := td.Service.CreateRule(NotificationRuleInput{
-			ChannelID: channel1.ID,
-			EventID:   packetlossEvent.ID,
-			Enabled:   boolPtr(true),
+			ChannelID: channel1.ID,        // 关联到渠道1
+			EventID:   packetlossEvent.ID, // 丢包率高事件
+			Enabled:   boolPtr(true),      // 启用规则
 		})
 		require.NoError(t, err)
 
 		rule3, err := td.Service.CreateRule(NotificationRuleInput{
-			ChannelID: channel1.ID,
-			EventID:   agentEvent.ID,
-			Enabled:   boolPtr(true),
+			ChannelID: channel1.ID,   // 关联到渠道1
+			EventID:   agentEvent.ID, // 代理离线事件
+			Enabled:   boolPtr(true), // 启用规则
 		})
 		require.NoError(t, err)
 
-		// Create a rule for channel 2 (should not be affected)
+		// 为渠道2创建一个规则（应该不受删除渠道1的影响）
 		rule4, err := td.Service.CreateRule(NotificationRuleInput{
-			ChannelID: channel2.ID,
-			EventID:   speedtestEvent.ID,
-			Enabled:   boolPtr(true),
+			ChannelID: channel2.ID,       // 关联到渠道2
+			EventID:   speedtestEvent.ID, // 测速完成事件
+			Enabled:   boolPtr(true),     // 启用规则
 		})
 		require.NoError(t, err)
 
-		// Log notification history for channel 1
-		payload1 := "Test notification 1"
+		// 为渠道1记录通知历史
+		payload1 := "测试通知 1"
 		err = td.Service.LogNotification(channel1.ID, speedtestEvent.ID, true, nil, &payload1)
 		require.NoError(t, err)
 
-		errorMsg := "Failed to send"
-		payload2 := "Test notification 2"
+		// 记录一个发送失败的通知
+		errorMsg := "发送失败"
+		payload2 := "测试通知 2"
 		err = td.Service.LogNotification(channel1.ID, packetlossEvent.ID, false, &errorMsg, &payload2)
 		require.NoError(t, err)
 
-		payload3 := "Test notification 3"
+		payload3 := "测试通知 3"
 		err = td.Service.LogNotification(channel1.ID, agentEvent.ID, true, nil, &payload3)
 		require.NoError(t, err)
 
-		// Log notification history for channel 2
-		payload4 := "Test notification 4"
+		// 为渠道2记录通知历史
+		payload4 := "测试通知 4"
 		err = td.Service.LogNotification(channel2.ID, speedtestEvent.ID, true, nil, &payload4)
 		require.NoError(t, err)
 
-		// Verify all data exists
+		// 验证所有数据都已成功创建
 		AssertRecordExists(t, td, "notification_channels", "id", channel1.ID)
 		AssertRecordExists(t, td, "notification_rules", "id", rule1.ID)
 		AssertRecordExists(t, td, "notification_rules", "id", rule2.ID)
 		AssertRecordExists(t, td, "notification_rules", "id", rule3.ID)
 		AssertRecordExists(t, td, "notification_rules", "id", rule4.ID)
 
-		// Verify we have notification history
+		// 验证渠道1有3条通知历史记录
 		var historyCount int
 		query := "SELECT COUNT(*) FROM notification_history WHERE channel_id = ?"
 		if td.Config.Type == "postgres" {
@@ -271,28 +310,28 @@ func TestNotificationChannel_CascadeDelete(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 3, historyCount)
 
-		// Delete channel 1
+		// 删除渠道1
 		err = td.Service.DeleteChannel(channel1.ID)
 		require.NoError(t, err)
 
-		// Verify channel 1 is deleted
+		// 验证渠道1已被删除
 		AssertRecordNotExists(t, td, "notification_channels", "id", channel1.ID)
 
-		// Verify all rules for channel 1 are cascade deleted
+		// 验证渠道1的所有规则都已被级联删除
 		AssertRecordNotExists(t, td, "notification_rules", "id", rule1.ID)
 		AssertRecordNotExists(t, td, "notification_rules", "id", rule2.ID)
 		AssertRecordNotExists(t, td, "notification_rules", "id", rule3.ID)
 
-		// Verify channel 2 and its rule are NOT affected
+		// 验证渠道2及其规则不受影响
 		AssertRecordExists(t, td, "notification_channels", "id", channel2.ID)
 		AssertRecordExists(t, td, "notification_rules", "id", rule4.ID)
 
-		// Verify notification history for channel 1 is cascade deleted
+		// 验证渠道1的通知历史已被级联删除
 		err = td.DB.QueryRow(query, channel1.ID).Scan(&historyCount)
 		require.NoError(t, err)
 		assert.Equal(t, 0, historyCount)
 
-		// Verify notification history for channel 2 still exists
+		// 验证渠道2的通知历史仍然存在
 		if td.Config.Type == "postgres" {
 			query = "SELECT COUNT(*) FROM notification_history WHERE channel_id = $1"
 		}
@@ -300,56 +339,64 @@ func TestNotificationChannel_CascadeDelete(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, historyCount)
 
-		// Double-check by trying to retrieve rules
+		// 再次检查：尝试通过渠道ID检索规则
 		rules, err := td.Service.GetRulesByChannel(channel1.ID)
 		require.NoError(t, err)
-		assert.Empty(t, rules)
+		assert.Empty(t, rules) // 渠道1的规则应该为空
 
 		rules, err = td.Service.GetRulesByChannel(channel2.ID)
 		require.NoError(t, err)
-		assert.Len(t, rules, 1)
+		assert.Len(t, rules, 1) // 渠道2应该有1条规则
 	})
 }
 
-// TestNotificationEvent_CascadeDelete verifies deleting events cascades to rules and history
+// TestNotificationEvent_CascadeDelete 测试通知事件的级联删除功能
+// 该函数验证删除通知事件时，相关的规则和历史记录是否会被级联删除
+// 注意：在实际应用中，通知事件通常是种子数据，不应该被删除
+// 这个测试仅用于记录如果事件被删除时的级联行为
 func TestNotificationEvent_CascadeDelete(t *testing.T) {
-	// Note: In a real application, events are typically seeded and not deleted.
-	// This test documents the cascade behavior if events were to be deleted.
-	t.Skip("Notification events are seeded data and should not be deleted in normal operation")
+	// 注意：在实际应用中，事件通常是种子数据，不应该被删除。
+	// 这个测试仅用于记录如果事件被删除时的级联行为。
+	t.Skip("通知事件是种子数据，在正常操作中不应该被删除")
 }
 
-// TestCascadeDelete_Performance verifies cascade deletes work efficiently with large datasets
+// TestCascadeDelete_Performance 测试级联删除的性能
+// 该函数验证级联删除在处理大数据集时的效率
+// 测试创建大量记录并测量级联删除的执行时间
 func TestCascadeDelete_Performance(t *testing.T) {
+	// 如果在短模式下运行，则跳过性能测试
 	if testing.Short() {
-		t.Skip("Skipping performance test in short mode")
+		t.Skip("在短模式下跳过性能测试")
 	}
 
 	RunTestWithBothDatabases(t, func(t *testing.T, td *TestDatabase) {
-		// Create a monitor with many results
+		// 创建一个测试用的丢包监视器
 		monitor := CreateTestPacketLossMonitor(t, td)
 
-		// Create 1000 results
+		// 创建1000个测试结果，模拟大数据集
 		start := time.Now()
 		for i := 0; i < 1000; i++ {
 			result := &types.PacketLossResult{
-				MonitorID:   monitor.ID,
-				PacketLoss:  float64(i%100) / 10.0,
-				MinRTT:      10.0,
-				MaxRTT:      20.0,
-				AvgRTT:      15.0,
-				PacketsSent: 10,
-				PacketsRecv: 10,
-				CreatedAt:   time.Now().Add(time.Duration(-i) * time.Minute),
+				MonitorID:   monitor.ID,                                      // 关联到刚创建的监视器
+				PacketLoss:  float64(i%100) / 10.0,                           // 丢包率从0%到9.9%循环
+				MinRTT:      10.0,                                            // 最小往返时间固定为10ms
+				MaxRTT:      20.0,                                            // 最大往返时间固定为20ms
+				AvgRTT:      15.0,                                            // 平均往返时间固定为15ms
+				PacketsSent: 10,                                              // 发送的数据包数量
+				PacketsRecv: 10,                                              // 接收的数据包数量（无丢包）
+				CreatedAt:   time.Now().Add(time.Duration(-i) * time.Minute), // 创建时间（每分钟递减）
 			}
 
+			// 保存丢包结果到数据库
 			err := td.Service.SavePacketLossResult(result)
 			require.NoError(t, err)
 		}
 
+		// 记录插入1000条记录的耗时
 		insertDuration := time.Since(start)
-		t.Logf("Inserted 1000 results in %v", insertDuration)
+		t.Logf("插入1000条记录耗时: %v", insertDuration)
 
-		// Verify count
+		// 验证创建的记录数量
 		var count int
 		query := "SELECT COUNT(*) FROM packet_loss_results WHERE monitor_id = ?"
 		if td.Config.Type == "postgres" {
@@ -357,22 +404,23 @@ func TestCascadeDelete_Performance(t *testing.T) {
 		}
 		err := td.DB.QueryRow(query, monitor.ID).Scan(&count)
 		require.NoError(t, err)
-		assert.Equal(t, 1000, count)
+		assert.Equal(t, 1000, count) // 应该有1000条记录
 
-		// Delete monitor and time cascade delete
+		// 删除监视器并测量级联删除的耗时
 		start = time.Now()
 		err = td.Service.DeletePacketLossMonitor(monitor.ID)
 		require.NoError(t, err)
 		deleteDuration := time.Since(start)
 
-		t.Logf("Cascade deleted 1000 results in %v", deleteDuration)
+		// 记录级联删除1000条记录的耗时
+		t.Logf("级联删除1000条记录耗时: %v", deleteDuration)
 
-		// Verify all deleted
+		// 验证所有记录都已被级联删除
 		err = td.DB.QueryRow(query, monitor.ID).Scan(&count)
 		require.NoError(t, err)
-		assert.Equal(t, 0, count)
+		assert.Equal(t, 0, count) // 记录数量应该为0
 
-		// Cascade delete should be reasonably fast (under 5 seconds even for 1000 records)
+		// 级联删除应该相当快（即使是1000条记录也应该在5秒内完成）
 		assert.Less(t, deleteDuration, 5*time.Second)
 	})
 }
